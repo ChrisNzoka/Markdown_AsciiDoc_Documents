@@ -334,10 +334,49 @@ When you installed Linux in the previous exercise, you used virtual optical medi
 
 > Information: As a note, to stop the service, use the following commands:
 
-    # systemctl disable vncserver@:1.service
+```bash
+# systemctl disable vncserver@:1.service
+```
 
-    # systemctl stop vncserver@:1.service
+```bash
+# systemctl stop vncserver@:1.service
+```
 
 20. Open the VNC viewer application on your Windows VM, and log in to your Red Hat Enterprise Linux server.
-    - Enter the IP address as <Your_Linux_IP_Address>:5901.
+    - Enter the IP address as `<Your_Linux_IP_Address>:5901`.
     - Click Continue to accept an unencrypted connection. Then, enter the password for the ‘student’ user.
+    ![VNC authentication](./images/vnc_img_1.jpg)
+
+21. The first time you login to the VNC session, you will have to answer a series of questions. First, set the language. Click _Next_ after selecting _English_.
+
+22. The next menu provides an opportunity to set the keyboard layout. Take the default option and continue by clicking _Next_.
+
+23. The next menu asks if location services need to be on. For now, let’s set it at on and click _Next_.
+    ![Location setting](./images/Location.jpg)
+
+24. The next menu provides the ability to connect to existing online accounts. Click _Skip_.
+
+25. You’re now ready to go. Click ‘Start Using Red Hat Enterprise Linux’.
+    ![Start Button](./images/start.jpg)
+
+26. The next screen provides some Getting Started related tips.
+    ![Getting started tips](./images/getting_started_tips.jpg)
+
+27. Click the Close button on the top-right corner to close the Getting Started menu.
+
+28. Right click on the Desktop, go to Display Settings and select a resolution that looks good for your machine.
+    ![Select Resolution](./images/select_resolution.jpg)
+
+## Section 4. System management tools
+
+>Note: The following questions navigate many of the graphical administrative tools available with Red Hat Enterprise Linux. Some questions are designed more as an introduction, and not an in-depth look at the specific operation. The goal of these questions is not to infer that the GUI tools are superior to CLI options.
+
+29. From your VNC session, select the Activities tab at the top of the screen. What do you see?
+    ![Activities tab](./images/Activities_menu.jpg)
+
+30. To improve VNC picture quality, move your mouse next to the where date and time is displayed. VNC settings should pop up as shown below.
+    ![VNC Viewer Settings](./images/VNC_settings.jpg)
+
+31. Click _Properties_. Select Picture quality as ‘High’.
+    ![Picture quality settings](./images/Picture_quality_settings.jpg)
+
