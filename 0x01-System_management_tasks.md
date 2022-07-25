@@ -343,9 +343,10 @@ When you installed Linux in the previous exercise, you used virtual optical medi
 ```
 
 20. Open the VNC viewer application on your Windows VM, and log in to your Red Hat Enterprise Linux server.
+
     - Enter the IP address as `<Your_Linux_IP_Address>:5901`.
     - Click Continue to accept an unencrypted connection. Then, enter the password for the ‘student’ user.
-    ![VNC authentication](./images/vnc_img_1.jpg)
+      ![VNC authentication](./images/vnc_img_1.jpg)
 
 21. The first time you login to the VNC session, you will have to answer a series of questions. First, set the language. Click _Next_ after selecting _English_.
 
@@ -369,7 +370,7 @@ When you installed Linux in the previous exercise, you used virtual optical medi
 
 ## Section 4. System management tools
 
->Note: The following questions navigate many of the graphical administrative tools available with Red Hat Enterprise Linux. Some questions are designed more as an introduction, and not an in-depth look at the specific operation. The goal of these questions is not to infer that the GUI tools are superior to CLI options.
+> Note: The following questions navigate many of the graphical administrative tools available with Red Hat Enterprise Linux. Some questions are designed more as an introduction, and not an in-depth look at the specific operation. The goal of these questions is not to infer that the GUI tools are superior to CLI options.
 
 29. From your VNC session, select the Activities tab at the top of the screen. What do you see?
     ![Activities tab](./images/Activities_menu.jpg)
@@ -380,3 +381,47 @@ When you installed Linux in the previous exercise, you used virtual optical medi
 31. Click _Properties_. Select Picture quality as ‘High’.
     ![Picture quality settings](./images/Picture_quality_settings.jpg)
 
+32. You may optionally scale the display using the other VNC options to determine the right fit for your environment.
+
+33. Click _Activities_, followed by _Files_.
+    ![Files](./images/files.jpg)
+
+34. Click on **Other Locations**, then **Computer**. Look at the **root** folder. What do you see?
+    ![path to root folder](./images/root_folder.jpg)
+
+    - Remember that the VNC server is serviced by the user student, so access to the root folder contents would not be allowed due to permission settings. This is indicated by the X symbol.
+
+35. Click Activities followed by Software. This is like an app store where you can find and fetch good software. Close this application.
+
+36. Click Activities, then enter System Monitor on the search bar.
+    ![search bar](./images/Search_bar.jpg)
+
+    - Open the System Monitor application.
+
+37. View the System Monitor option. What does this show?
+
+    - The first menu shows active Processes. You can also select the Resources or File Systems button to see additional information.
+      ![system monitor](./images/system_monitor.jpg)
+
+38. Close the System Monitor application. From the Activities tab, search for Disks. Open the Disks application. What devices are shown
+
+    - As in the example below, you should see all disks known by the system. Notice the primary drive (sda), shows as a model IBM NVDISK. This is because the disk is backed by the VIO Server.
+      ![Disk manager](./images/disk_application.jpg)
+
+39. Close the Disks application. From Activities, click Terminal.
+    - Find out the present working directory.
+      ![current working directory](./images/pwd.jpg)
+
+> **Question:**
+> What is the present working directory? \***\*\_\_\_\_\*\***
+
+40. Enter the `gnome-system-monitor` command from the terminal prompt. Does this look familiar?
+
+    - Your screen should show the same window as the **system monitor** tool you accessed before. Navigate through the 3 sub-menus to see what information is available.
+      ![system monitor](./images/system_monitor_2.jpg)
+
+41. Close all open applications on your Windows VM.
+
+42. Return to your learning platform and proceed with the course.
+
+## End of exercise
