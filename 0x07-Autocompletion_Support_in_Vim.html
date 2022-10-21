@@ -1,0 +1,200 @@
+<h2>1. Overview</h2>
+<a href="https://www.baeldung.com/linux/vi-vim-editors">Vim</a> text editor
+supports autocompletion for the standard text files by default. Also, when
+configured properly, Vim enables an autocomplete feature for files with code in
+the languages it recognizes. In this tutorial, we'll see
+<strong>how the autocompletion support in Vim works.</strong>
+<h2>2. Built-in Support</h2>
+Of course, recent versions of the Vim editor come with a built-in autocomplete
+feature.
+<strong
+  >Vim completes words by checking the available terms currently in the
+  buffer</strong
+>. Importantly, this functionality is case-sensitive.
+<h3>2.1. <em>Ctrl-N</em></h3>
+First, we'll see how to use the autocomplete feature in a standard text file.
+For this purpose, let's open an example .<em>vimrc</em> configuration file.
+Next, we'll enter a few characters of a word we need to write and
+<strong>press <em>Ctrl-N </em>to trigger autocompletion</strong>. If Vim finds
+only one match, it will automatically complete the term. However,
+<strong
+  >if Vim finds more than one match for the text, a list of words will
+  appear</strong
+>:
+
+<img
+  class="aligncenter wp-image-80756 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/09/Screenshot-23-1.png"
+  alt="ctrl-n"
+  width="793"
+  height="597"
+/>
+
+We can select the preferable term from the list. Also,
+<strong>we can use <em>Ctrl</em>-P to make the list cycle backward</strong>.
+Alternatively, we can use the arrow keys to move up and down the list.
+<strong
+  >If the program finds no match to complete a word, we'll see an error stating </strong
+><em><strong>Pattern not Found</strong>:</em>
+
+<img
+  class="aligncenter wp-image-80757 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/09/Screenshot-25-1.png"
+  alt="ctrl-n_autocompletion"
+  width="797"
+  height="596"
+/>
+
+Also, to see Vim's documentation on the autocomplete functionality, we can
+use <em>:help i_CTRL-N</em>.
+<h3>2.2. Omnicompletion</h3>
+<a href="https://www.vim.org/scripts/script.php?script_id=3172"
+  >Omnicompletion</a
+>
+provides an intelligent autocompletion feature for programs in Vim. When called,
+<strong
+  >Omnicompletion examines the text before the cursor to predict the intended
+  word</strong
+>. Ordinarily, Omnicompletion is not available by default. Now, to enable
+Omnicompletion features on Vim, let's add the following to our
+<em>~/.vimrc:</em>
+<pre><code class="language-bash">" Enable plugins and load plugin for the detected file type.
+filetype plugin on
+" Enable Omnicomplete features
+set omnifunc=syntaxcomplete#Complete</code></pre>
+Here, the double quotation marks begin comment lines. Below each comment is the
+line with the described function. Finally,
+<strong>we can press <em>Ctrl-X</em> and <em>Ctrl-O</em> to start </strong
+><strong>Omnicompletion</strong>. To check whether Omnicompletion is working,
+<strong>we can use the command <em>:echo &amp;omnifunc</em> in a file</strong>.
+In addition,
+<strong>we can set up Omnicompletion for specific language syntax in Vim</strong
+>. For example, to set up autocompletion for JavaScript syntax, we'll enter the
+following command in the Vim command mode and press <em>Enter</em>:
+<pre><code class="language-bash">:set omnifunc=javascriptcomplete#CompleteJS
+</code></pre>
+Similarly, the following commands work for HTML, CSS, and PHP, respectively:
+<ul>
+  <li><em>:set omnifunc=htmlcomplete#CompleteTags</em></li>
+  <li><em>:set omnifunc=csscomplete#CompleteCSS</em></li>
+  <li><em>:set omnifunc=phpcomplete#CompletePHP</em></li>
+</ul>
+Furthermore, Vim autocompletion has some excellent substitutes. The command
+<em>:h ins-completion</em> shows the variety of built-in completion options on
+our system.
+<h2>3. Plugins</h2>
+Generally, plugins add extra functionality to any program. Thus,
+<strong>we can add plugins to Vim to extend its auto-completion features</strong
+>. Notably, we can employ
+<a href="https://www.baeldung.com/linux/vim-install-neovim-plugins"
+  >plugin managers</a
+> like <a href="https://github.com/junegunn/vim-plug">vim-plug</a> and
+<a href="https://github.com/gmarik/Vundle.vim">vundle</a> to ease the plugin
+installation process. Following, let's look at some autocompletion plugins for
+vim and their unique features.
+<h3>3.1. SuperTab</h3>
+<a href="https://github.com/ervandew/supertab">SuperTab</a> is a Vim
+autocompletion plugin that allows the use of Tab for all insert completions.
+<strong
+  >The plugin enables us to hit Tab after a partial entry to get an
+  autocompletion functionality</strong
+>. For instance, we might want to type "editors". So, we enter "e" and press
+Tab. The plugin shows a keyword completion list. Then we can select the desired
+word from the list. The SuperTab plugin is similar to the built-in
+Omnicompletion alternative. However, there are a few differences, as we can:
+<ul>
+  <li dir="auto">configure it to suit our needs</li>
+  <li dir="auto">configure different keys to trigger the completion</li>
+  <li dir="auto">get a completion result when Omnicompletion returns none</li>
+</ul>
+To install and set up SuperTab, let's create a directory for the installation:
+<pre><code class="language-bash">$ mkdir -p ~/.vim/pack/plugins/start
+</code></pre>
+Next, let's clone the SuperTab repository via
+<a href="https://www.baeldung.com/git-guide"><em>git</em></a
+>:
+<pre><code class="language-bash">$ git clone --depth=1 https://github.com/ervandew/supertab.git ~/.vim/pack/plugins/start/supertab
+</code></pre>
+Further, we'll add <em>packloadall</em> to our <em>~/.vimrc</em> file:
+<pre><code class="language-bash">" Enable packloadall for pack plugins.
+packloadall</code></pre>
+Finally, we can get to the
+<a href="https://github.com/ervandew/supertab/blob/master/doc/supertab.txt"
+  >SuperTab documentation</a
+>
+from within Vim using the <em>:help supertab</em> command.
+<h3>3.2. Jedi-Vim</h3>
+Next, <a href="https://github.com/davidhalter/jedi-vim">Jedi-Vim</a> is a Python
+autocompletion plugin within Vim. Basically, it's a
+<strong
+  >Vim binding to the autocompletion library
+  <a href="http://github.com/davidhalter/jedi">Jedi</a></strong
+>. Uniquely, Jedi-Vim stands out with its broad support for most of Python's
+core features. We can use
+<a href="https://github.com/gmarik/Vundle.vim">Vundle</a> to install Jedi-Vim.
+To illustrate, let's add the plugin to our configuration file:
+<pre><code class="language-bash">Plugin 'davidhalter/jedi-vim'</code></pre>
+Next, we'll save and source the file. After that, we run the
+<em>:PluginInstall </em>command in Vim. Importantly,
+<strong>to use Jedi-Vim while coding, we press </strong
+><em><strong>Ctrl-Space</strong></em
+>. As with other plugins, we can access the
+<a href="http://github.com/davidhalter/jedi-vim/blob/master/doc/jedi-vim.txt"
+  >Jedi-Vim documentation</a
+>
+in <em>vim</em> with the <em>:help jedi-vim</em> command.
+<h3>3.3. YouCompleteMe</h3>
+<a href="https://github.com/ycm-core/YouCompleteMe">YouCompleteMe</a> is a fast
+and intelligent suggest-as-you-type code-completion and refactoring engine for
+Vim. It has several completion engines built in. Hence,<strong>
+  YouCompleteMe can work with almost any language</strong
+>. Indeed, the YouCompleteMe plugin is unique and has several advantages over
+other autocompletion plugins:
+<ul>
+  <li>works with any programing language</li>
+  <li>
+    we don't have to press any keyboard combination to trigger the
+    autocompletion
+  </li>
+  <li>
+    the filtering is not based on the input being a string prefix of the
+    completion (but that works too)
+  </li>
+</ul>
+Similar to other plugins, we use Tab to go through any valid suggestions. The
+<a href="https://github.com/ycm-core/YouCompleteMe#installation"
+  >YouCompleteMe installation</a
+>
+is outside the scope of this article. However, an important step is to install
+<a
+  href="https://www.baeldung.com/linux/compile-32-bit-binary-on-64-bit-os#using-cmake"
+  >CMake</a
+>
+and Python. In Debian-based systems, we can do that via <a
+  href="https://www.baeldung.com/linux/yum-and-apt#apt-advanced-packaging-tool"
+  ><em>apt</em></a
+>:
+<div
+  class="snippet-clipboard-content notranslate position-relative overflow-auto"
+>
+  <pre
+    class="notranslate"
+  ><code>$ sudo apt install build-essential cmake python3-dev</code></pre>
+  <div class="open_grepper_editor" title="Edit &amp; Save To Grepper">
+    Further, we'll install mono-complete, go, node, java, and npm
+  </div>
+</div>
+<div
+  class="snippet-clipboard-content notranslate position-relative overflow-auto"
+>
+  <pre
+    class="notranslate"
+  ><code>$ sudo apt install mono-complete golang nodejs default-jdk npm
+</code></pre>
+</div>
+After having the necessary packages, we follow the installation guide to set up
+and compile YouCompleteMe.
+<h2>4. Summary</h2>
+In conclusion, autocompletion is a great feature in the Vim editor. We have seen
+how to use the built-in autocompletion features in Vim but also learned about
+plugins with the same function.

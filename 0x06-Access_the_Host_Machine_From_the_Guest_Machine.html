@@ -1,0 +1,170 @@
+<h2>1. Introduction</h2>
+Virtualization allows multiple operating systems to easily co-exist on the same
+machine. In this tutorial, we'll demonstrate how to access the host machine from
+the guest machine. In the end, we should have a setup where the guest machine
+can:
+<ul>
+  <li>Use the Internet</li>
+  <li>Ping the host</li>
+  <li>Access an SSH server running on the host</li>
+</ul>
+Now, let's take a look at the procedure and tools we'll employ in this guide.
+<h2>2. Procedure and Tools</h2>
+In this article,
+<strong
+  >we'll employ the
+  <a href="https://www.virtualbox.org/">Oracle VirtualBox</a> virtualization
+  software and an Ubuntu virtual machine (VM) to access a Microsoft Windows
+  host.</strong
+>
+
+Generally, the procedure to access the host machine from the guest involves:
+<ol>
+  <li>Setting up network adapters</li>
+  <li>Testing the network to ensure access</li>
+</ol>
+After this, other tools and software rely on this access to the host machine.
+<h2>3. Set Up Network Adapters</h2>
+Virtual machines can connect to physical and virtual networks using virtual
+network adapters. In VirtualBox, we can set up VMs to connect to different
+networks using multiple network modes.
+
+<strong
+  >The following network mode configuration gives the VM access to the
+  host:</strong
+>
+<ul>
+  <li>Network Access Translation (NAT)</li>
+  <li>Host-only Adapter</li>
+</ul>
+Let's set up the virtual network adapters from the graphical user interface
+(GUI).
+<h3>3.1. Network Access Translation (NAT)</h3>
+In fact, the NAT network mode is the default virtual network adapter in
+VirtualBox.
+<strong
+  >NAT networks allow guest machines to access the host and external networks,
+  including the Internet</strong
+>. Next, to configure this network mode, we'll click on the guest virtual
+machine. Then, we'll go to its settings and select the <em>Network</em> menu:
+
+<img
+  class="aligncenter wp-image-79049 size-large"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/08/Network_Menu-1024x726.png"
+  alt="Network Menu"
+  width="580"
+  height="411"
+/>
+
+Then, to enable a network adapter, let's check the
+<em>Enable Network Adapter</em> checkbox on <em>Adapter 1</em>. Also, we'll
+select <em>NAT</em> from the dropdown menu (usually the default setting):
+<div>
+  <img
+    class="aligncenter wp-image-79264 size-large"
+    src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/08/NAT_SET-UP-1024x743.png"
+    alt="Adapter ! network set up"
+    width="580"
+    height="421"
+  />
+</div>
+Furthermore, we'll ensure the <em>Adapter type</em> is in tandem with the system
+hardware specifications. If not, from the dropdown menu, let's select the
+matching <em>Adapter Type</em> for our system:
+
+<img
+  class="aligncenter wp-image-79263 size-large"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/08/NAT_ADVANCED_SET-UP-1024x778.png"
+  alt="Advanced Network set up"
+  width="580"
+  height="441"
+/>
+
+Lastly, we'll check the <em>Cable Connected</em> checkbox, enabling the
+connection, and click <em>OK</em> to save our settings:
+<h3>3.2. <strong>Host-only Adapter</strong></h3>
+Additionally,
+<strong
+  >the Host-only Adapter allows the virtual machine to communicate with the host
+  machine.</strong
+>
+Also, the adapter allows access to other guest machines connected to the
+host-only network. To illustrate,
+<strong
+  >let's set up the second virtual network adapter with Host-only Adapter
+  mode.</strong
+>
+Following our previous procedure for selecting NAT, we'll:
+<ol>
+  <li>Click on <em>Adapter 2</em></li>
+  <li>Check the <em>Enable Network Adapter</em> checkbox</li>
+  <li>From the dropdown menu, select <em>Host-only Adapter</em></li>
+  <li>Ensure the <em>Adapter Type</em> matches <em>Adapter 1</em></li>
+  <li>Set the <em>Promiscuous mode</em> to <em>Allow all</em></li>
+  <li>Mark the <em>Cable connected</em> checkbox</li>
+</ol>
+<img
+  class="aligncenter wp-image-79048 size-large"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/08/Network_Adapter-2-1024x726.png"
+  alt="Network Adapter 2"
+  width="580"
+  height="411"
+/>
+
+Lastly, we'll click <em>OK</em> to save our settings.
+<h2>4. Test the Network</h2>
+Having set the network adapters correctly,
+<strong
+  >we can now access the host machine from the guest over the network</strong
+>. To illustrate, we'll ping the host from the guest machine using the
+<em><a href="https://www.baeldung.com/linux/ping-command">ping</a> </em>command.
+Also, we'll establish an SSH connection to an SSH server running on the host.
+Before the ping, let's check for the host IP address using the command
+<em
+  ><a href="https://www.baeldung.com/linux/ifconfig-vs-ipconfig"
+    >ipconfig</a
+  ></em
+>:
+<pre><code class="language-powershell">PS C:\Users\baeldung&gt; ipconfig
+
+Windows IP Configuration
+
+Ethernet adapter VirtualBox Host-Only Network:
+
+   Connection-specific DNS Suffix  . :
+   Link-local IPv6 Address . . . . . : fe80::f58c:1377:4796:d1cd%16
+   IPv4 Address. . . . . . . . . . . : 192.168.56.1
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . :
+...</code></pre>
+From the output, the IP address of the host on the
+<em>Ethernet adapter VirtualBox Host-Only Network</em> is <em>192.168.56.1</em>.
+Now, let's <em>ping</em> the host from the guest using the host's IP address:
+<pre><code class="language-bash">$ ping 192.168.56.1 -c 1
+PING 192.168.56.1 (192.168.56.1) 56(84) bytes of data.
+64 bytes from 192.168.56.1: icmp_seq=1 ttl=127 time=0.593 ms
+--- 192.168.56.1 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.593/0.593/0.593/0.000 ms</code></pre>
+Accordingly, we see that the ping was successful. The <em>-c </em>flag allows us
+to specify the count (number of packet requests). Now, we can connect to an SSH
+server on the host. To do this, our host needs to have an SSH server running on
+the standard <a href="https://www.baeldung.com/cs/ssh-intro">SSH</a> port
+<em>22</em>. Also, we have to install an
+<a href="https://www.baeldung.com/linux/transfer-files-ssh">SSH client</a> on
+our guest machine. Using this IP address and the user login, let's connect to
+the host:
+<pre><code class="language-bash">baeldung@guest $ ssh baeldung@192.168.56.1
+The authenticity of host '192.168.56.1 (192.168.56.1)' can't be established.
+ECDSA key fingerprint is SHA256:9jqmhko9Yo1EQAS1QeNy9xKceHFG5F8W6kp7EX9U3Rs.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no[fingerprint])? yes
+Warning: Permanently added '192.168.56.1' (ECDSA) to the list of known hosts.
+
+baeldung@192.168.56.1 $</code></pre>
+Now, we have an SSH session with the host. Usually, we need to provide the user
+and password or a key to gain access.
+<h2>6. Conclusion</h2>
+In this article, we've seen how to set up a VirtualBox guest machine to access
+its host machine over the network. Also, we confirmed the setup by pinging and
+accessing the host using the SSH protocol.

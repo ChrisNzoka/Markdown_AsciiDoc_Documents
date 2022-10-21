@@ -1,0 +1,207 @@
+<h2>1. Overview</h2>
+<strong
+  >Read-only is a file system property that permits users to read or copy stored
+  data but not write new information or edit the data.</strong
+>
+Alternatively, we can identify a Hard Disk Drive (HDD) in a read-only state as a
+write-protected device. Usually, a write-protected disk shows the
+<em>read-only filesystem</em> error message on any attempt to modify its
+content. This error indicates that the system mounts the target drive's file
+system in read-only mode. Hence, we cannot write to or alter its content. The
+following conditions can corrupt or set an HDD in read-only mode:
+<ul>
+  <li>Unexpected power loss</li>
+  <li>System crashes</li>
+  <li>Unsafe removal of the drive</li>
+  <li>Bootable disks</li>
+  <li>Absence of write permissions</li>
+</ul>
+<strong
+  >In this tutorial, we'll explain how to change the HDD state from read-only
+  after a temporary crash in Linux.</strong
+>
+<h2>2. Locate the Drive</h2>
+The first step to fixing a read-only error is to locate the HDD mount point.
+<strong
+  >To locate a drive, we can run the
+  <a href="https://www.baeldung.com/linux/mount-unmount-filesystems"
+    ><em>mount</em></a
+  >
+  command and pass it through
+  <em
+    ><a href="https://www.baeldung.com/linux/grep-hidden-files-directories"
+      >grep</a
+    >.</em
+  ></strong
+>
+The <em>grep</em> command helps to filter the output and highlight the argument
+given to it:
+<pre><code class="language-bash">$ mount | grep /dev/
+devpts on /dev/pts type devpts (rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000)
+/dev/sda5 on / type ext4 (rw,relatime,errors=remount-ro)
+tmpfs on /dev/shm type tmpfs (rw,nosuid,nodev,inode64)
+hugetlbfs on /dev/hugepages type hugetlbfs (rw,relatime,pagesize=2M)
+mqueue on /dev/mqueue type mqueue (rw,nosuid,nodev,noexec,relatime)
+/dev/sda1 on /boot/efi type vfat
+  (rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro)
+/dev/fuse on /run/user/1000/doc type fuse (rw,nosuid,nodev,relatime,user_id=1000,group_id=1000)
+/dev/sdb4 on /media/chris/writable type ext4 (rw,nosuid,nodev,relatime,uhelper=udisks2)
+/dev/sdb1 on /media/chris/Ubuntu-Server 22.04 LTS amd64 type iso9660
+  (ro,nosuid,nodev,relatime,nojoliet,check=s,map=n,blocksize=2048,uid=1000,gid=1000,dmode=500,fmode=400,iocharset=utf8,uhelper=udisks2)
+</code></pre>
+<strong
+  >Generally, SATA device names follow the pattern <em>/dev/sd[a-z]</em>, while
+  NVMe device names have the pattern <em>/dev/nvme[1-9]n[1-9]</em>.</strong
+>
+
+From the output, we can identify the read-only devices with <em>ro</em> as the
+initial attribute in the parentheses. Similarly, <em>rw</em> indicates a device
+mounted as read/write. Also, the output of the <em>mount</em> command shows the
+mount point of each HDD partition. The drive <em>/dev/sdb1</em> mounted on <em
+  >/media/chris/Ubuntu-Server 22.04 LTS amd64</em
+>
+is a read-only device.
+<h2>3. Restore Write Permission</h2>
+<strong
+  >To determine the permissions on a drive, we can use the
+  <a href="https://www.baeldung.com/linux/list-only-directories-in-path"
+    ><em>ls</em></a
+  >
+  command with the <em>-l</em> option and the device name.</strong
+>
+The following command lists the disk and its permissions:
+<pre><code class="language-bash">$ ls -l /dev/sdb1
+brw-r----- 1 root disk 8, 17 Jul 22 11:34 /dev/sdb1</code></pre>
+Accordingly, with appropriate remount flags, the <em>mount</em> command can
+quickly repair a read-only error. To illustrate, let's execute the following
+line of command to remount the drive:
+<pre><code class="language-bash">$ sudo mount -o remount,uid=1000,gid=1000,rw /dev/sdb1
+...</code></pre>
+<strong
+  >The <em>-o</em> flag allows the <em>mount</em> command to use a
+  comma-separated list of options.</strong
+>
+The ensuing are the roles of the comma-separated options in the command:
+<ul>
+  <li>
+    <em>remount</em> - remounts the drive over the same mount point with the
+    same previous options
+  </li>
+  <li>
+    <em>uid=1000</em> - makes the user with <em>id=1000</em> the owner of the
+    drive
+  </li>
+  <li>
+    <em>gid=1000</em> - assigns the group with <em>id=1000</em> as the group
+    owner of the drive
+  </li>
+  <li><em>rw</em> - mounts the drive as read/write</li>
+  <li><em>/dev/sdb1</em> - indicates the name of the device</li>
+</ul>
+The values of these options come from the output of the previous
+<em>mount</em> command in section 2. However, this quick-fix does not work for
+all HDD crash situations. For example, the <em>mount</em> command gives the
+following output when the command fails:
+<pre><code class="language-bash">$ sudo mount -o remount,uid=1000,gid=1000,rw /dev/sdb1
+mount: /media/chris/Ubuntu-Server 22.04 LTS amd64:
+  cannot remount /dev/sdb1 read-write, is write-protected.</code></pre>
+If the remounting command does not fix the error, then we can proceed to repair
+the file system on the drive.
+<h2>4. Fix Read-Only HDD</h2>
+Again, different cases of HDD crashes can render its file system read-only. The
+procedure to fix such a device requires that we:
+<ol>
+  <li>Unmount the drive</li>
+  <li>Check and repair the file system</li>
+  <li>Remount the drive</li>
+  <li>Reboot the system</li>
+</ol>
+<h3>4.1. Unmount Drive</h3>
+<strong
+  >The <a href="https://www.baeldung.com/linux/mount-unmount-filesystems"
+    ><em>umount</em></a
+  >
+  command unmounts an HDD from its mount point.</strong
+>
+It takes the mount point of the drive as an attribute. Again, we recall that we
+can use the <em>mount</em> command to locate devices mounted as read-only. The
+following command unmounts <em>/dev/sdb1</em>:
+<pre><code class="language-bash">$ sudo umount /dev/sdb1</code></pre>
+However,
+<strong
+  >we cannot unmount the root file system on which the device is
+  running.</strong
+>
+Hence, let's ensure to boot from an external bootable device when aiming to fix
+a system HDD. Next, let's check and repair the file system on the device.
+<h3>4.2. Check and Repair File System</h3>
+<strong
+  >The
+  <a href="https://www.baeldung.com/linux/lost-found-directory"
+    ><em>fsck</em></a
+  >
+  program checks and repairs one or more Linux file systems.</strong
+>
+With the following <em>fsck</em> command and the device name attribute, we can
+check and repair the file system on the faulty drive:
+<pre><code class="language-bash">$ sudo fsck /dev/sdb1
+fsck from util-linux 2.34
+e2fsck 1.44.1 (23-Jul-2022)
+second_disk: clean 54/81280 files, 149903/325096 blocks</code></pre>
+However, if we do not supply a device to the command, it will check file systems
+in the <em>/etc/fstab</em> file serially.
+<h3>4.3. Remount Drive</h3>
+After repair, we have to remount the device to a new mount point. To remount the
+HDD, we'll:
+<ol>
+  <li>Create a new mount point</li>
+  <li>Mount the drive to the new mount point</li>
+  <li>Write the changes in the <em>/etc/fstab</em> file</li>
+</ol>
+To illustrate, let's <strong>create a new mount point</strong>:
+<pre><code class="language-bash">$ mkdir HDdevice</code></pre>
+Further, the following command mounts the HDD to the new mount point:
+<pre><code class="language-bash">$ sudo mount -o rw,uid=1000,gid=1000,user,exec,umask=003,blksize=4096 /dev/sdb1/media/HDdevice</code></pre>
+In addition, here’s a rundown of what’s going on in the command:
+<ul>
+  <li><em>user</em> - permits any user to mount the HDD</li>
+  <li><em>exec</em> - allows for the execution of binaries</li>
+  <li>
+    <em>umask=003</em> - assigns <em>rwxrwxr--</em> permissions to directories
+    and files in the device
+  </li>
+  <li><em>/media/HDdevice</em> - indicates the name of the hard disk</li>
+  <li><em>blksize=4096</em> - assigns block size of 4096 to the drive</li>
+</ul>
+Lastly, let's write the changes in the <em>/etc/fstab</em> file. It ensures our
+changes remain intact on system startup. First, let's
+<strong
+  >create a backup of the <em>/etc/fstab</em> file to safeguard its
+  content:</strong
+>
+<pre><code class="language-bash">$ sudo cp /etc/fstab /etc/fstab.bak</code></pre>
+Secondly, using the <em>nano</em> text editor, let's write the following changes
+in the <em>/etc/fstab</em> file:
+<pre><code class="language-bash">$ sudo nano /etc/fstab
+...
+# line for mounting the Hddevice
+ UUID=D04A-0AE4   /media/HDdevice  exfat
+  rw,uid=1000,gid=1000,user,exec,umask=003,blksize=4096   0   0</code></pre>
+Then, let's<strong
+  > press<em> Ctrl+X, Y,</em> and <em>Enter</em> to save and close the
+  file.</strong
+>
+<h3>4.4. Reboot the System</h3>
+To confirm our changes, let's restart the system with the
+<a href="https://www.baeldung.com/linux/shutdown-reboot-from-terminal"
+  ><em>shutdown</em></a
+>
+command. The following shutdown command, along with the -<em>r</em> flag,
+restarts the system:
+<pre><code class="language-bash">$ shutdown -r</code></pre>
+Consequently, the <em>shutdown</em> command sends a signal to stop all running
+processes and unmount devices safely before shutdown.
+<h2>5. Conclusion</h2>
+In this article, we learned how we could change a device state from read-only
+after a temporary crash in Linux. Also, we've seen alternative programs that
+solve similar problems at each step in the repair process.

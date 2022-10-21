@@ -1,0 +1,285 @@
+<h2>1. Introduction</h2>
+Linux and macOS have a shared history. However, this doesn't imply that programs
+may easily switch between the two operating systems. It often requires a virtual
+machine or a translation layer to run
+<a href="https://www.apple.com/macos">macOS</a> programs on Linux. In this
+tutorial, we'll explore ways to run
+<a href="https://developer.apple.com/xcode/">Xcode</a> on Linux.
+<h2>2. Running Xcode on Linux</h2>
+Xcode is a software development tool created by Apple that's:
+<ul>
+  <li>a proprietary software native to macOS and Apple hardware</li>
+  <li>an Integrated Development Environment (IDE)</li>
+  <li>a package with a set of tools for building Apple-related apps</li>
+</ul>
+Since it's closed-source software, we cannot simply run the Xcode app on Linux.
+However, the open-source movement is strong in the whole Unix world, shared by
+both macOS and Linux. So, it's unsurprising that the low-level tools and
+libraries used to build Xcode are open source. Despite this, the high-level
+components of the IDE are proprietary content made for macOS, and running the
+Xcode app directly on Linux would violate the
+<a href="https://www.apple.com/legal/sla/docs/xcode.pdf"
+  >Apple Xcode End User Licensing Agreement</a
+>. Nevertheless, the open-source low-level toolchain for Xcode allows us to run
+the original Xcode command-line tool on Linux. We can do this with third-party
+tools.
+<h2>3. Darling</h2>
+<strong
+  ><a href="https://www.darlinghq.org/">Darling</a> is a translation layer that
+  enables Linux users to run macOS applications</strong
+>. Currently, Darling works with simple graphical user interface (GUI) apps and
+several command-line apps. Hence,
+<strong>we can run the Xcode command-line tool using Darling</strong>.
+<h3>3.1. Build and Install Darling</h3>
+First,
+<strong>we'll download the necessary dependencies for our Linux distro</strong>.
+For example, let's download and install what's required on
+<a href="https://ubuntu.com/">Ubuntu</a>:
+<pre><code class="language-bash">$ sudo apt-get install cmake clang bison flex xz-utils libfuse-dev libudev-dev pkg-config \
+libc6-dev:i386 linux-headers-generic gcc-multilib libcap2-bin libcairo2-dev libgl1-mesa-dev \
+libtiff5-dev libfreetype6-dev libfreetype6-dev:i386 git libelf-dev libxml2-dev libegl1-mesa-dev \
+libfontconfig1-dev libbsd-dev</code></pre>
+<div class="holsh-div">
+  <div class="bash">
+    Next, let's clone the Darling
+    <a href="https://www.baeldung.com/git-guide">git</a> repository to our local
+    machine:
+  </div>
+</div>
+<div class="holsh-div">
+  <div class="bash">
+    <pre><code class="language-bash">$ git clone --recursive https://github.com/darlinghq/darling.git</code></pre>
+  </div>
+</div>
+Then, we'll change into the Darling clone directory:
+<div class="holsh-div">
+  <div class="bash">
+    <pre><code class="language-bash">$ cd darling</code></pre>
+  </div>
+</div>
+Now, let's make a <em>build</em> directory for the build process:
+<pre><code class="language-bash">$ mkdir build &amp;&amp; cd build</code></pre>
+Inside the build directory, we configure the build with
+<a href="https://www.baeldung.com/linux/compile-32-bit-binary-on-64-bit-os"
+  ><em>CMake</em></a
+>:
+<div class="holsh-div">
+  <div class="bash">
+    <pre><code class="language-bash">$ cmake ..</code></pre>
+  </div>
+</div>
+Now, let's build Darling with
+<a href="https://www.baeldung.com/linux/change-install-dir-make-install"
+  ><em>make</em></a
+>:
+<pre><code class="language-bash">$ make</code></pre>
+Importantly, <strong>the actual build process can take up to an hour</strong>,
+depending on the resources of our machine. Finally, we'll install Darling, build
+the Darling kernel module, and install <em>darling_mach</em>:
+<pre><code class="language-bash">$ sudo make install
+$ make lkm
+$ sudo make lkm_install</code></pre>
+At this point, we've set up Darling on our Linux system. Next, we'll proceed to
+install and run the Xcode command-line tool.
+<h3>3.2. Install Xcode on Linux With Darling</h3>
+To run a program on Linux with Darling, first, we'll access the Darling
+subsystem and launch a macOS shell environment running the
+<em>darling</em> shell:
+<div class="holsh-div">
+  <div class="bash">
+    <pre><code class="language-bash">$ darling shell</code></pre>
+  </div>
+</div>
+Now, we can run macOS system commands. Of course, additional macOS software
+installation happens within the <em>darling</em> shell. Hence, running commands
+doesn't work without connecting to Darling. Finally,
+<strong>we can download and install Xcode command-line tools from Apple</strong
+>:
+<pre><code class="language-bash hljs">$ xcode-select --install</code></pre>
+Of course, the Xcode package and its command-line tools are subject to the Apple
+End User Licensing Agreement (EULA).
+<h2>4. macOS Virtual Machine</h2>
+As usual, one way to run macOS apps on Linux is via a virtual machine (VM). With
+virtualization software like
+<a href="https://www.virtualbox.org/">VirtualBox</a>, we can set up a macOS VM.
+Similarly, <a href="https://www.qemu.org">QEMU</a> is a virtual machine emulator
+and virtualizer. Using QEMU alongside
+<a href="https://www.linux-kvm.org/page/Main_Page">KVM</a> natively applies the
+virtual machine on the Linux kernel.
+<h3>4.1. Install QEMU and KVM</h3>
+To demonstrate,
+<strong
+  >we'll use the
+  <a href="https://github.com/foxlet/macOS-Simple-KVM">macOS-Simple-KVM</a>
+  project to set up a simple macOS VM in QEMU/KVM setup</strong
+>. For this setup, the Linux system must have:
+<ul>
+  <li>qemu</li>
+  <li><a href="https://www.python.org/">python3</a></li>
+  <li><a href="https://pypi.org/project/pip/">pip</a></li>
+  <li>KVM modules</li>
+</ul>
+Notably, we can install these requirements on Debian-based systems using the
+package installer:
+<pre><code class="language-bash">$ sudo apt-get install qemu-system qemu-utils python3 python3-pip
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+...</code></pre>
+However,
+<strong
+  >we can follow the guide on the project
+  <a href="https://github.com/foxlet/macOS-Simple-KVM#getting-started"
+    >documentation</a
+  >
+  to install these requirements on other Linux distributions</strong
+>.
+<h3>4.2. Download the Project Kit</h3>
+Next, let's set up the Linux KVM to run macOS. First, we'll download the
+<a
+  href="https://github.com/foxlet/macOS-Simple-KVM/archive/refs/heads/master.zip"
+  >project archive</a
+>
+to our home directory (<em>~</em>):
+<pre><code class="language-bash">$ cd ~
+$ wget https://github.com/foxlet/macOS-Simple-KVM/archive/refs/heads/master.zip</code></pre>
+Then, using the
+<a href="https://www.baeldung.com/linux/zip-unzip-command-line"
+  ><em>unzip</em></a
+>
+command-line utility on the terminal, let's extract the contents of the file:
+<pre><code class="language-bash">$ unzip master.zip</code></pre>
+We now have the <em>~/</em><em>macOS-Simple-KVM-master</em> directory.
+<h3>4.3. Download the Installation Media</h3>
+First, to simplify the management of the macOS VM, let's create a folder for the
+virtual machine:
+<pre><code class="language-bash">$ mkdir ~/Linux_KVM</code></pre>
+Next, let's move our project directory to the new directory:
+<pre><code class="language-bash">$ mv ~/macOS-Simple-KVM-master/ ~/Linux_KVM/macOS-Simple-KVM-master</code></pre>
+Further, we'll proceed to download installation media for macOS in our project
+directory. First, let's change to the
+<em>macOS-Simple-KVM-master</em> directory:
+<pre><code class="language-bash">$ cd ~/Linux_KVM/macOS-Simple-KVM-master</code></pre>
+Now, let's download installation media for macOS:
+<pre><code class="language-bash">$ ./jumpstart.sh
+Requirement already satisfied: requests /usr/lib/python3/dist-packages (from -r requirements .txt (line 1)) (2.23.0)
+...
+Archive successfully decompressed as ~/Linux_KVM/macOS-Simple-KVM-master/BaseSystem.img</code></pre>
+By default,
+<strong
+  >the <em>macOS-Simple-KVM-master/</em><em>jumpstart.sh script </em>downloads
+  the macOS Catalina installation image</strong
+>.
+<h3>4.4. Create a Virtual Hard Disk</h3>
+Following the download of the base system image, we can proceed to create a
+virtual hard disk. This disk is the location where we'll install the macOS. Now,
+we'll use the
+<a href="https://www.baeldung.com/linux/virtualbox-create-vm-from-physical"
+  ><em>qemu-img</em></a
+>
+utility to create the virtual hard disk:
+<pre><code class="language-bash">$ qemu-img create -f qcow2 MyDisk.qcow2 64G
+formatting 'MyDisk.qcow2', fmt=qcow2 size=673847625632 cluster_size=65536 lazy_refcounts=off refcount bits=16</code></pre>
+Here, <em>qemu-img</em> creates a virtual disk using the
+<em>create</em> subcommand and the <em>-f</em> flag. Also, the virtual disk has
+the name <em>MyDisk.qcow2</em> in the <em>qcow2</em> format with an estimated
+size of 64GB. Next, let's append the command to use the disk to the <em>~/</em
+><em>macOS-Simple-KVM-master/</em><em>basic.sh</em> script:
+<pre><code class="language-bash">    -drive id=SystemDisk,if=none,file=MyDisk.qcow2 \
+    -device ide-hd,bus=sata.4,drive=SystemDisk \</code></pre>
+At this point, we have a VM ready for macOS installation.
+<h3>4.5. Install macOS</h3>
+Now, to install the macOS, let's run the <em>basic.sh</em> script file in the
+terminal:
+<pre><code class="language-bash">$ ./basic.sh</code></pre>
+In essence, this command will display the initial installation screen of the
+macOS operating system. Note the difference in resolution between the host and
+guest. Then, we'll press <em>Enter</em> and continue with the installation
+process:
+
+<img
+  class="aligncenter wp-image-81596 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/09/macos-installer-boot.png"
+  alt="Booting into the macOS installer"
+  width="1282"
+  height="784"
+/>
+
+Upon completing the installation, we should have a screen like the one below
+running on QEMU:
+
+<img
+  class="wp-image-81631 size-full aligncenter"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/09/macos-desktop.png.png"
+  alt="macOS Desktop"
+  width="1281"
+  height="786"
+/>
+
+&nbsp; Now, we can proceed to download and install Xcode on the virtual machine.
+<h3>4.6. Install Xcode</h3>
+In general, to download Xcode on our virtual machine, there are a few steps to
+complete:
+<ol>
+  <li>
+    Go to the Apple developer website's
+    <a href="https://developer.apple.com/download/all/">download</a> section
+    (which requires an Apple ID)
+  </li>
+  <li>
+    Select and download our preferred Xcode version <em>Xcode X.X</em> in the<em>
+      .xip</em
+    >
+    format
+  </li>
+  <li>
+    Select and download the respective command-line tools as
+    <em>Command Line Tools for Xcode X.X</em> in the<em> .dmg</em> format
+  </li>
+  <li>Install the command-line tools</li>
+</ol>
+Finally, we can install Xcode from the command line:
+<pre><code class="language-bash hljs">$ xcode-select --install</code></pre>
+Lastly, we can proceed to open Xcode from the Applications folder. However,
+Xcode may prompt us to <em>install additional required components</em>:
+
+<img
+  class="aligncenter wp-image-81539 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/09/xcode-add-components.png"
+  alt="Additional Xcode Components"
+  width="487"
+  height="168"
+/>
+
+We'll click install. This installation can take a few minutes. Finally, we can
+proceed to Xcode:
+
+<img
+  class="aligncenter wp-image-81635 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/09/xcode-run.png"
+  alt="Additional Xcode components"
+  width="1282"
+  height="783"
+/>
+
+Importantly, this method of running macOS is subject to Apple's legal terms and
+conditions.
+<h2>5. Xcode in the Cloud</h2>
+Alternatively, the easiest way to use Xcode on Linux is via the cloud. Cloud
+service providers like
+<a href="https://www.macincloud.com">MacinCloud</a> provide "Mac-in-the-Cloud"
+solutions via the Internet. Notably, a user can access on-demand Mac servers.
+
+<img
+  class="aligncenter wp-image-81636 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/09/macincloud-xcode.png"
+  alt="Mac in the Cloud Xcode"
+  width="1920"
+  height="1080"
+/>
+
+Similarly, <a href="https://www.macstadium.com/">MacStadium</a> is another cloud
+option. In addition, they provide desktop and application development services.
+<h2>6. Summary</h2>
+In this article, we saw different ways to run Xcode on Linux. Also, we briefly
+discussed "Mac-in-the-Cloud" services.
