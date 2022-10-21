@@ -1,0 +1,186 @@
+<h2>1. Overview</h2>
+<a href="https://linux.die.net/man/1/ffmpeg"><em>ffmpeg</em></a> is a free and
+open-source set of multimedia file management tools. Using <em>ffmpeg</em>, we
+can convert between different video and audio formats. Also, we can alter sample
+rates, record streaming audio and video, resize videos, and concatenate videos.
+In this tutorial, we start with the steps to install the program on Ubuntu,
+CentOS, and Debian. Importantly, we'll also demonstrate how to concatenate
+videos using the command.
+<h2>2. Installing <em>ffmpeg</em></h2>
+<strong
+  >The installation process of <em>ffmpeg</em> requires root or
+  <em>sudo</em> privileges.</strong
+>
+To demonstrate, let's update the <em>apt</em> package list and install
+<em>ffmpeg</em>:
+<pre
+  class="add-horizontal-scrollbar"
+><code class="language-bash">$ sudo apt update
+...
+$ sudo apt install ffmpeg
+...</code></pre>
+Finally, let's print information about <em>ffmpeg</em> via <em>-version</em> to
+check our installation:
+<pre
+  class="add-horizontal-scrollbar"
+><code class="language-bash">$ ffmpeg -version
+ffmpeg version 4.4.2-1ubuntu3 Copyright (c) 2000-2022 the FFmpeg developers
+...</code></pre>
+The output's header shows the version of the program, but we can also see its
+configuration and the libraries it uses. Also, we can use
+<a href="https://snapcraft.io/">snap</a> to
+<a href="https://www.baeldung.com/linux/convert-videos-gifs-ffmpeg"
+  >install the latest stable version</a
+>
+of <em>ffmpeg</em> on a Debian/Ubuntu machine. Next, let's move to video
+concatenation.
+<h2>3. Concatenation Prerequisites</h2>
+There are various methods to employ when merging videos using <em>ffmpeg</em>.
+Among them are the concat functions:
+<ul>
+  <li>demuxer</li>
+  <li>filter</li>
+  <li>protocol</li>
+</ul>
+Further, each use case depends on the properties of the videos in question.
+Importantly, we need to ensure all encoding-related properties align with our
+method of choice:
+<ul>
+  <li>timebase</li>
+  <li>height and width</li>
+  <li>codecs</li>
+  <li>pixel format</li>
+</ul>
+For some methods, we have to use files with the same encoding, while others
+allow different files.
+<h2>4. Concat Script Demuxer</h2>
+The <a href="https://ffmpeg.org/ffmpeg-formats.html#concat-1">concat</a> script
+demuxer is usually the most simple of all methods for merging. It's very fast
+and has no quality loss. This is because there is no decoding or re-encoding
+required.
+
+<strong>To concatenate videos with the concat demuxer method</strong>, we first
+create a text file, listing all video files. Then we run a command, to process
+that list. In this case, we'll use the files <em>Kali.mp4</em>,
+<em>openLDAP.mp4</em>, and <em>SSH.mp4</em>.
+<h3>4.1. Listing Files For Concat Demuxer</h3>
+Let's compile a list of videos to concatenate in a text file using the
+<a href="https://www.baeldung.com/linux/printf-echo"><em>printf</em></a>
+command:
+<pre
+  class="add-horizontal-scrollbar"
+><code class="language-bash">$ printf "file '%s'\n" *.mp4 &gt; list.txt</code></pre>
+This command writes the name of files ending in <em>.mp4</em> in the current
+directory to <em>list.txt</em>. Note, that the
+<strong
+  >video file paths should be on new lines, within single quotes, prefixed with
+  the word <em>file</em></strong
+>:
+<pre class="add-horizontal-scrollbar"><code class="language-bash">$ cat list.txt
+file 'Kali.mp4'
+file 'openLDAP.mp4'
+file 'SSH.mp4'</code></pre>
+<em>ffmpeg </em>reads and concatenates the videos in order, as they appear on
+the list. Importantly, the first file begins at timestamp zero (0), while each
+ensuing file begins where the previous one ends. Hence,
+<strong
+  ><i>ffmpeg</i> uses the duration of each file to adjust the timestamps of the
+  next file</strong
+>.
+<h3>4.2. Concatenating Using Concat Demuxer</h3>
+Now, let's use the <em>-f concat</em> flag to merge the videos from our
+<em>list.txt</em> file:
+<pre
+  class="highlight shell"
+><code>$ ffmpeg -f concat -i list.txt -c copy outfile.mp4</code></pre>
+Here, the value of the <em>-i</em> flag indicates the path to the input file.
+Also, <em>-c copy</em> ensures there is no re-encoding. Next, we add
+<strong
+  ><em>-safe</em> as an important option, the value of which decides whether to
+  reject (<em>1</em>) or accept (<em>0</em>) unsafe paths</strong
+>:
+
+<code>$ ffmpeg -f concat -safe 0 -i list.txt -c copy outfile.mp4</code>
+
+Mostly, a file path is safe if it:
+<ul>
+  <li>does not specify a protocol</li>
+  <li>
+    contains only characters from the portable character set (letters, numerals,
+    period, underscore, and hyphen)
+  </li>
+  <li>has no period at the beginning of its name</li>
+</ul>
+Lastly, the transcoding process of <em>ff</em><em>mpeg</em> includes demuxing,
+decoding, encoding, and muxing. Since we're using <em>-c copy</em>, this leaves
+only demuxing and muxing.
+<h2>5. Concat Multimedia Filter</h2>
+Of course, we often have videos with different encodings. We can merge those
+with the concat filter since it re-encodes as part of its process. Also, it
+enables filtering the input files before merging. Since it goes through the
+whole transcoding chain, this method is generally slower. Critically,
+<strong
+  >for the concat filter to work correctly, all video files must start at
+  timestamp zero (0.00).</strong
+>
+<h3>5.1. Concatenating Videos With a Single Audio Stream</h3>
+To explain the contact filter, we'll use <em>start.mkv</em>, <em>body.mkv</em>,
+and <em>rear.mkv</em> with a single audio stream:
+<pre
+  class="example"
+><code>$ ffmpeg -i start.mkv -i body.mkv -i rear.mkv -filter_complex \
+  "[0:v] [0:a] [1:v] [1:a] [2:v] [2:a]
+  concat=n=3:v=1:a=1 [v] [a]" \
+  -map "[v]" -map "[a]" output.mkv</code></pre>
+Here's a quick rundown of what's going on in the command:
+<ol>
+  <li>Supply input files with the <em>-i </em>flags</li>
+  <li>Use <em>-filter_complex</em> to select streams from the input files</li>
+  <li>
+    Select the actual streams in a specific order: video and audio from the
+    first, second, and third file
+  </li>
+  <li>Use the filter <em>concat=n=3:v=1:a=1 [v] [a]</em></li>
+  <li>Map the resulting audio and video streams to the output</li>
+</ol>
+In step 4, the number of files we want to join is in the value of
+<em>n</em> (default is 2). Next, we follow with <em>v</em> (default is 1), which
+sets the number of output video streams. Similarly, <em>a</em> (default is 0)
+sets the number of audio streams in each section. It also sets the number of
+output audio streams. Finally, the <em>-map</em> flag in step 5 allows for a
+custom stream selection in each output file if there are multiple. Users can
+skip -<em>map</em> and let <em>ffmpeg</em> handle stream selection.
+<h3>5.2. Concatenating Videos With Multiple Audio Streams</h3>
+Likewise, let's concatenate an opening, an episode, and an ending, with two
+audio streams. That is, video in stream 0, audio in streams 1 and 2:
+<pre
+  class="example"
+><code>$ ffmpeg -i opening.mkv -i episode.mkv -i ending.mkv -filter_complex \
+ '[0:0] [0:1] [0:2] [1:0] [1:1] [1:2] [2:0] [2:1] [2:2]
+  concat=n=3:v=1:a=2 [v] [a1] [a2]' \
+ -map '[v]' -map '[a1]' -map '[a2]' output.mkv</code></pre>
+Notice that the second line in this example is like
+<em>[0:v] [0:a] [0:a] [1:v] [1:a] [1:a] [2:v] [2:a] [2:a]</em> in the notation
+of our previous examples. In fact, this shows that we have a single video stream
+(<em>[0:v]</em>, <em>[1:v]</em>, <em>[2:v]</em>) and dual audio streams
+(<em>[0:a][0:a]</em>, <em>[1:a][1:a]</em>, <em>[2:a][2:a]</em>).
+<h2>6. Physical Concatenation Protocol</h2>
+The concat protocol is another way of concatenating videos with <em>ffmpeg</em>.
+It reads and seeks from a large pool of resources, treating each one as unique.
+However,
+<strong
+  >this approach doesn't work with several formats, including
+  <em>MP4</em></strong
+>. It's the nature of these formats as well as the method's basic concatenation
+that prevents its general application.
+<strong
+  >We can use the concat protocol with formats like MPEG, which allows
+  file-level concatenation</strong
+>. For example, let's concatenate the files <em>clay.mpeg</em>,
+<em>sculpt.mpeg</em>, and <em>mold.mpeg</em>:
+<pre><code class="language-bash">$ ffmpeg -i "concat:clay.mpeg\|sculpt.mpeg\|mold.mpeg" -c copy output.mkv</code></pre>
+Notice that we use <em>\</em> (backslash) to escape the pipe symbol.
+<h2>7. Conclusion</h2>
+In this article, we saw several ways for concatenating videos with
+<em>ffmpeg</em>. We also saw how to install <em>ffmpeg</em> on various Linux
+distributions.
