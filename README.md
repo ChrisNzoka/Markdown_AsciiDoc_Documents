@@ -9,3 +9,4 @@ A collection of documents created using the Markdown and AsciiDoc markup languag
 ## List of contents
 
 1. [Yum and VNC Setup Guide on IBM Power System](0x01-System_management_tasks.md)
+2. [How to extend logical & extended partition with fdisk](0x02-How_to_extend_logical_&_extended_partition_with_fdisk.html)
