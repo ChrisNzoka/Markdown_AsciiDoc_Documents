@@ -1,0 +1,183 @@
+<h2>1. Overview</h2>
+<a href="https://www.virtualbox.org/">VirtualBox</a> is a powerful and
+open-source virtualization software with excellent features. Additionally, it
+provides the
+<a href="https://www.virtualbox.org/wiki/VirtualBox_PUEL"
+  >VirtualBox Extension Pack</a
+>
+for extending the basic functionalities of the software.
+
+<strong
+  >In this tutorial, we'll see how to install Virtualbox Extension Pack to
+  VirtualBox on Linux.</strong
+>
+<h2>2. Virtualbox Extension Pack Features</h2>
+The Oracle VirtualBox Extension pack offer
+<a href="https://www.virtualbox.org/manual/ch01.html#features-overview"
+  >features</a
+>
+such as:
+<ul>
+  <li>
+    USB 2.0 and 3.0 Host controllers to allow the usage of physical USB devices
+    in the virtual environment
+  </li>
+  <li>Disk image encryption for data security</li>
+  <li>
+    Connecting to a remote VM through the VirtualBox interface using VirtualBox
+    Remote Desktop Protocol (VRDP)
+  </li>
+  <li>
+    Use of host webcam on a guest operating system via the VirtualBox interface
+  </li>
+  <li>
+    Intel PXE Boot ROM to boot up a VM via an emulated PXEboot ROM for
+    installing an operating system
+  </li>
+  <li>
+    Open Virtualization Format (OVF) to allow ease in importing and exporting
+    virtual machines, including those created with different virtualization
+    software
+  </li>
+</ul>
+However, new features are added, and existing features are updated, with each
+new release.
+<h2>3. VirtualBox Extension Pack Prerequisites</h2>
+Of course, there are prerequisites to installing VirtualBox Extension Pack on
+the CLI:
+<ul>
+  <li>
+    An up-to-date <a href="https://www.virtualbox.org/">VirtualBox software</a>
+  </li>
+  <li>
+    The
+    <a href="https://www.virtualbox.org/wiki/Downloads"
+      >VirtualBox Extension Pack binary file</a
+    >
+  </li>
+  <li>
+    <em
+      ><a
+        href="https://www.virtualbox.org/manual/ch08.html#vboxmanage-cmd-overview"
+        >VBoxManage</a
+      ></em
+    >
+    command-line tool
+  </li>
+  <li>Administrative access to the CLI</li>
+</ul>
+Further, let's look at how to download and install the extension pack via the
+command line and GUI.
+<h2>4. Install VirtualBox Extension Pack Via the CLI</h2>
+There are a few simple steps to installing the VirtualBox extension pack through
+the command line. We'll download the VirtualBox Extension Pack binary file
+first. Then, we'll install the extension pack using the
+<em>VBoxManage</em> command-line tool.
+<h3>4.1. Downloading the Extension Pack</h3>
+Now, let's download the VirtualBox extension pack using
+<a href="https://www.baeldung.com/linux/wget-download-directory-subdirectories"
+  ><em>wget</em></a
+>:
+<pre><code class="language-bash">$ wget https://download.virtualbox.org/virtualbox/6.1.34/Oracle_VM_VirtualBox_Extension_Pack-6.1.34.vbox-extpack
+Resolving download.virtualbox.org (download.virtualbox.org)... 23.56.184.145
+Connecting to download.virtualbox.org (download.virtualbox.org)|23.56.184.145|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 11137259 (11M) [text/plain]
+Saving to: ‘Oracle_VM_VirtualBox_Extension_Pack-6.1.34.vbox-extpack’
+Oracle_VM_VirtualBo 100%[===================&gt;] 10.62M 1.44MB/s in 18s
+2022-06-11 14:39:01 (598 KB/s) - ‘Oracle_VM_VirtualBox_Extension_Pack-6.1.34.vbox-extpack’ saved [11137259/11137259]</code></pre>
+Of course, we have to take note of the location or path to the file during our
+download. Furthermore, let's see how to install the extension pack using the
+<a href="https://www.virtualbox.org/manual/ch08.html#vboxmanage-cmd-overview"
+  ><em>VBoxManage</em></a
+>
+command-line tool.
+<h3>4.2. Installing the Extension Pack</h3>
+<em>VBoxManage</em> is the command-line interface to Oracle VM VirtualBox. It's
+usually installed alongside the VirtualBox software. With this tool, we can
+perform all VM operations on the CLI without using a GUI. Now, we can check for
+the <em>VBoxManage</em> tool using:
+<pre class="add-horizontal-scrollbar"><code>$ VBoxManage --version
+6.1.32_Ubuntur149290</code></pre>
+Further, let's install the extension pack:
+<pre><code class="language-bash">$ sudo VBoxManage extpack install --replace Oracle_VM_VirtualBox_Extension_Pack-6.1.34.vbox-extpack
+VirtualBox Extension Pack Personal Use and Evaluation License (PUEL)
+
+License version 11, 21 May 2020
+
+...
+
+Do you agree to these license terms and conditions (y/n)? y
+License accepted. For batch installation add
+--accept-license=33d7284dc4a0ecw381196fda3sfe2ed0e1e8e7ed7f27b9a9ebc4ee22e24bd23c
+to the VBoxManage command line.
+
+0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...100%
+Successfully installed "Oracle VM VirtualBox Extension Pack".
+</code></pre>
+The <em>--replace</em> flag instructs the program to replace any previous
+versions of the package if there are any. Also,
+<strong
+  >the installation process requires we accept the VirtualBox Extension Pack
+  license terms and conditions</strong
+>. We'll type "y" and hit enter to accept and continue the installation.
+Finally, let's check if the installation was done correctly:
+<pre><code class="language-bash">$ VBoxManage list extpacks
+Pack no. 0:   Oracle VM VirtualBox Extension Pack
+Version:      6.1.34
+Revision:     150636
+Edition:      
+Description:  Oracle Cloud Infrastructure integration, USB 2.0 and USB 3.0 Host Controller, Host Webcam, VirtualBox RDP, PXE ROM, Disk Encryption, NVMe.
+VRDE Module:  VBoxVRDP
+Usable:       true 
+Why unusable:</code></pre>
+The output from the command line shows information about the extension pack.
+This includes the pack number, which indexes from zero(0), the extension pack
+version, and the description.
+<h2>5. Install VirtualBox Extension Pack Via the GUI</h2>
+Again, we can install VirtualBox Extension Pack through the graphical user
+interface (GUI). The VirtualBox GUI is cross-platform compatible, and the
+installation process for VirtualBox Extension Pack is the same on any OS. To
+illustrate, we'll first download the
+<a
+  href="https://download.virtualbox.org/virtualbox/6.1.34/Oracle_VM_VirtualBox_Extension_Pack-6.1.34.vbox-extpack"
+  >VirtualBox Extension Pack</a
+>
+from the Oracle VirtualBox
+<a href="https://www.virtualbox.org/wiki/Downloads">download page</a>. The
+download link is the "All supported platforms" link in the VirtualBox extension
+Pack section. Next, we add and install the extension pack from the VirtualBox
+GUI. To do this, we'll open the VirtualBox GUI and click on "Preferences":
+
+<img
+  class="wp-image-74951 aligncenter"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/06/oracle_VM_VirtualBox_Manager-1024x576.jpg"
+  alt="VirtualBox-Manager"
+  width="553"
+  height="311"
+/>
+
+Then, we'll navigate to the "Extensions" tab and click on the "Adds new package"
+icon. The icon is on the upper right side of the window:
+
+<img
+  class="aligncenter wp-image-74952 size-large"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/06/VirtualBox-Preferences-1024x576.jpg"
+  alt="Add new extension"
+  width="580"
+  height="326"
+/>
+
+Now, we select the VirtualBox extension we want to install and click "install".
+However,
+<strong
+  >VirtualBox will show the VirtualBox license. So, we'll scroll to the last
+  line of the terms and click "I agree"</strong
+>. Administrative access is required to install the VirtualBox extension pack to
+VirtualBox. So, on clicking "I agree", authentication is required to complete
+the installation process. Therefore, we'll enter our admin password and click
+"Authenticate". Finally, we'll click "Ok" once the installation process is done.
+<h2>6. Conclusion</h2>
+To sum up, we saw how to install VirtualBox Extension Pack to VirtualBox on
+Linux. Also, we saw how to install the VirtualBox Extension Pack via the CLI and
+GUI with examples.
