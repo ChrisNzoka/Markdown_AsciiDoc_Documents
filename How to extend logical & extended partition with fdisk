@@ -1,0 +1,280 @@
+<h2>1. Overview</h2>
+The <a class="editor-rtfLink" href="https://man7.org/linux/man-pages/man8/fdisk.8.html" target="_blank" rel="noopener"><em>fdisk</em></a> program is a Linux command-line utility for creating and modifying partition tables. It's a powerful tool and can be dangerous when misused. Hence, only root or users with <a href="https://www.baeldung.com/linux/sudo-command"><em>sudo</em></a> privileges can alter the partition table using the program.
+
+In this tutorial, <strong>we'll look at what partitions mean. Also, we'll learn the procedure for extending logical and extended partitions using the current version of the <em>fdisk </em>program.</strong>
+<h2>2. Disk Partitioning</h2>
+Of course, a drive requires at least one partition before we can format and store files on it. We can partition a disk into one or more logical disks, each of which operates as a separate disk and has its file system.
+
+Also, a partition table contains the information about the partitions. <strong>The <em>fdisk</em> utility recognizes Sun, SGI, and BSD partition tables in addition to GPT (GUID Partition Table) and MBR (Master Boot Record).</strong> Many operating systems and disks use the GPT and MBR partition tables.
+<h3 id="list-partitions">2.1. Listing Partitions</h3>
+<strong>To list the partition table of a device, we use the <em>fdisk</em> command with the <em>-l</em> option and the device name.</strong> However, if we don't specify any device, it will print partition tables of all the devices in the <a href="https://www.baeldung.com/linux/find-all-storage-devices"><em>/proc/partitions</em></a> file.
+
+In addition, the partition consists of the device name and partition number. For example, <em>/dev/sda1</em> is the first partition on the system's primary hard drive.
+
+Let's take a look at the GPT partition tables:
+<pre><code class="language-bash">$ sudo fdisk -l
+
+...
+
+Disk /dev/nvme0n1: 232.91 GiB, 250059350016 bytes, 488397168 sectors
+Disk model: Samsung SSD 960 EVO 250GB               
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 6907D1B3-B3AB-7E43-AD20-0707A656A1B5
+
+Device            Start       End   Sectors   Size Type
+/dev/nvme0n1p1     2048   1050623   1048576   512M EFI System
+/dev/nvme0n1p2  1050624  34605055  33554432    16G Linux swap
+/dev/nvme0n1p3 34605056 488397134 453792079 216.4G Linux filesystem
+
+...</code></pre>
+GPT (GUID Partition Table) is the modern standard partition table. It uses 64-bit logical block addresses and allows an unlimited number of partitions. However, some partitioning tools restrict the number of partitions to 128.
+
+<strong>The GPT partitioning scheme reserves the first sector for a protective MBR in the GPT specification.</strong> Thus, it prevents MBR-only partitioning tools from misrecognizing and overwriting GPT disks.
+<h3>2.2. Master Boot Record</h3>
+The Master Boot Record (MBR or DOS-type) has its limitations compared to GPT. <strong>Hence, GPT is gradually replacing MBR.</strong>
+
+The features of MBR include:
+<ul>
+ 	<li>support for only four primary partitions</li>
+ 	<li>it reserves the numbers 1-4 for the primary partitions</li>
+ 	<li>for more partitions, we have to make one of the primary partitions an “extended partition”</li>
+ 	<li>the extended partition contains the logical partitions</li>
+ 	<li>logical partitions numbering starts from 5</li>
+ 	<li>it works with disks of 2 TB maximum in size</li>
+</ul>
+Let's see an example of an MBR partition table:
+<pre><code class="language-bash">$ sudo fdisk -l
+
+...
+
+Disk /dev/sda: 465.78 GiB, 500107862016 bytes, 976773168 sectors
+Disk model: WDC WD5000AAKX-6
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x64ec60b3
+
+Device     Boot   Start       End   Sectors   Size Id Type
+/dev/sda1  *       2048   1050623   1048576   512M  b W95 FAT32
+/dev/sda2       1052670 976771071 975718402 465.3G  5 Extended
+/dev/sda5       1052672   2549759   1497088   731M 83 Linux
+/dev/sda6       2551808 976771071 974219264 464.6G 83 Linux
+
+...</code></pre>
+Generally, SATA device names follow the pattern <em>/dev/sd[a-z]</em>, while NVMe device names have the pattern <em>/dev/nvme[1-9]n[1-9]</em><strong>.</strong> Also, both SATA and NVMe devices support the GPT and MBR partition tables.
+<h2>3. Extend Partition with <em>fdisk</em></h2>
+<strong>The procedure to extend an extended or logical partition with <em>fdisk </em>starts with deleting both partitions.</strong> Then, we recreate the partition with the desired endpoint. Using the <em>fdisk</em> expert menu, we can adjust the beginning of the partition to expand it, thereby adjusting the start of the partition and not the endpoint.
+<h3>3.1. <em>fdisk </em>Command Menu</h3>
+The command menu allows the use of single-letter commands to specify actions. <strong>To enter the command menu of the program, we'll need the device name from the <em>fdisk -l </em>command output.</strong>
+
+Let's enter the command menu:
+<pre><code class="language-bash">$ sudo fdisk /dev/sda
+
+Welcome to fdisk (util-linux 2.34).
+Changes will remain in memory only until you decide to write them.
+Be careful before using the write command.
+
+
+Command (m for help):</code></pre>
+Typing the letter <em>m</em> displays a list of the commands for use in the program.
+<h3>3.2. Viewing the Partition Table</h3>
+<strong>Using the <em>p </em>command, let's print the current partition table to the terminal</strong> from within the command menu:
+<pre><code class="language-bash">Command (m for help): p
+Disk /dev/sda: 465.78 GiB, 500107862016 bytes, 976773168 sectors
+Disk model: WDC WD5000AAKX-6
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x64ec60b3
+
+Device     Boot   Start       End   Sectors   Size Id Type
+/dev/sda1  *       2048   1050623   1048576   512M  b W95 FAT32
+/dev/sda2       1052670 976771071 975718402 465.3G  5 Extended
+/dev/sda5       1052672   2549759   1497088   731M 83 Linux
+/dev/sda6       2551808 976771071 974219264 464.6G 83 Linux
+
+
+Command (m for help):</code></pre>
+From the output, we have an extended partition and two logical partitions. Following the procedure, we'll delete the extended and logical partitions, recreate them with our desired endpoint, and then extend the starting points.
+<h3>3.3. Deleting partitions</h3>
+<strong>The <em>d</em> command in the command menu deletes a partition.</strong>
+
+On entering the <em>d</em> command, the dialogue would require the number of the partition to delete. This is the number associated with the device partition from the <em>p</em> command's output. For example, to delete the partition at <em>/dev/sda5</em>, we'll key in <em>5</em>.
+
+However, deleting the extended partition would remove all the logical partitions under it. Again, if we don't specify any partition number in the dialogue, the program defaults to the last logical partition.
+
+Let's delete the extended partition:
+<pre><code class="language-bash">Command (m for help): d
+Partition number (1,2,5,6, default 6): 2
+
+Partition 2 has been deleted.
+
+Command (m for help):
+</code></pre>
+The command dialogue <em>2</em> deletes both the extended and logical partition. After deleting the partition, we can print and confirm our changes by viewing the current partition table:
+<pre><code class="language-bash">Command (m for help): p
+Disk /dev/sda: 465.78 GiB, 500107862016 bytes, 976773168 sectors
+Disk model: WDC WD5000AAKX-6
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x64ec60b3
+
+Device     Boot Start     End Sectors  Size Id Type
+/dev/sda1  *     2048 1050623 1048576  512M  b W95 FAT32
+
+
+Command (m for help):</code></pre>
+Next, we'll recreate the extended and logical partition.
+<h3>3.4. Creating a Partition</h3>
+<strong>The <em>n</em> command creates a new primary or extended partition.</strong> Again, the program will default to a primary partition if no option is selected.
+
+Also, <em>fdisk</em> will number the new partition as <em>/dev/sda2</em> for this example:
+<pre><code class="language-bash">Command (m for help): n 
+Partition type
+       p primary (1 primary, 0 extended, 3 free)
+       e extended (container for logical partitions)
+Select (default p): e
+Partition number (2-4, default 2):</code></pre>
+Next, we'll specify the starting sector of the new partition on the disk. However, pressing <em>Enter</em> accepts the program's default sector - the first free sector on the disk.
+
+Lastly, we'll set the last sector of the partition on the disk. Again, we'll hit <em>Enter</em> to use up all available space after the initial sector.
+
+Also, we can specify a size for the partition. For instance, <em>+10G</em> would result in a ten-gigabyte partition or <em>+800M</em> for an 800-megabyte partition. However, if we don't specify a unit after the <em>+</em> sign, <em>fdisk</em> uses sectors as the unit. For example, specifying +10000 in the dialogue would result in a partition with 10000 sectors from start to end.
+
+Let's set the first and last sectors of the partition:
+<pre><code class="language-bash">First sector (1050624-976773167, default 1050624): 1052670
+Last sector, +/-sectors or +/-size{K,M,G,T,P} (1052670-976773167, default 976773167): +465G   
+
+Created a new partition 2 of type 'Extended' and of size 465 GiB.
+
+Command (m for help):</code></pre>
+Subsequently, we'll create a new logical partition. It will begin at the end of <em>/dev/sda1</em> and take the remaining space of the extended partition. <strong>Also, creating a logical partition requires that an extended partition is present.</strong>
+
+To illustrate, let's create a logical partition. The procedure is the same as that of the extended partition. In contrast, <strong>the command for creating the logical partition type is <em>l</em></strong>.
+
+Since the logical partition will take up the entire extended partition, we'll choose the default first and last sectors the program specifies:
+<pre><code class="language-bash">Command (m for help): n
+Partition type
+   p   primary (1 primary, 1 extended, 2 free)
+   l   logical (numbered from 5)
+Select (default p): l
+
+Adding logical partition 5
+First sector (1054718-976228351, default 1054720): 
+Last sector, +/-sectors or +/-size{K,M,G,T,P} (1054720-976228351, default 976228351): 
+
+Created a new partition 5 of type 'Linux' and of size 465 GiB.
+
+Command (m for help):</code></pre>
+To confirm our change, let's run the <em>p </em>command:
+<pre><code class="language-bash">Command (m for help): p
+Disk /dev/sda: 465.78 GiB, 500107862016 bytes, 976773168 sectors
+Disk model: WDC WD5000AAKX-6
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x64ec60b3
+
+Device     Boot   Start       End   Sectors  Size Id Type
+/dev/sda1  *       2048   1050623   1048576  512M  b W95 FAT32
+/dev/sda2       1052670 976228351 975175682  465G  5 Extended
+/dev/sda5       1054720 976228351 975173632  465G 83 Linux
+
+Command (m for help): </code></pre>
+Next, let's extend the logical partition. We'll adjust its starting sector in the <em>fdisk</em> expert. The procedure is the same for extending an extended partition.
+<h3>3.5. <em>fdisk </em>Expert Menu</h3>
+<strong>The <em>x</em> command takes the <em>fdisk </em>program to the expert menu.</strong> Also, we can use the <em>m </em>call to view the list of commands available in the expert menu.
+
+The <em>b</em> command adjusts the beginning of the partition. Again, on entering <em>b</em>, the menu prompts for a partition number. It's the number corresponding to the partition we want to extend.
+
+For example, let's extend the logical partition <em>/dev/sda5</em> from 1054720 to 1052672:
+<pre><code class="language-bash">Command (m for help): x
+
+Expert command (m for help): b
+Partition number (1,2,5, default 5): 
+New beginning of data (1052671-976228351, default 1054720): 1052672
+
+Expert command (m for help):</code></pre>
+Similarly, the <em>p</em> command lists the disk partitions in the expert menu. To confirm our changes, let's list the disk partitions:
+<pre><code class="language-bash">Expert command (m for help): p
+
+Disk /dev/sda: 465.78 GiB, 500107862016 bytes, 976773168 sectors
+Disk model: WDC WD5000AAKX-6
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x64ec60b3
+
+Device     Boot   Start       End   Sectors Id Type      Start-C/H/S  End-C/H/S Attrs
+/dev/sda1  *       2048   1050623   1048576  b W95 FAT32       4/4/1 1023/254/2    80
+/dev/sda2       1052670 976228351 975175682  5 Extended      16/15/1   317/60/2      
+/dev/sda5       1052672 976228351 975175680 83 Linux         20/20/1   317/60/2      
+
+Expert command (m for help):</code></pre>
+<strong>Then, the <em>r</em> command exits the expert menu, and the <em>w </em>command writes the changes to the disk</strong>:
+<pre><code class="language-bash">Expert command (m for help): r
+
+Command (m for help): w
+
+The partition table has been altered.
+Syncing disks.</code></pre>
+If the old partitions are still in use, the program would fail to write changes to the disk.
+
+Next, we’ll format the new partitions with a filesystem using the appropriate <a href="https://man7.org/linux/man-pages/man8/mkfs.8.html"><em>mkfs</em></a> utility.
+<h2>4. Activating New Partition</h2>
+Having created the partitions, the next step is to format and mount them to the system directory tree. However, we don't need to mount the extended partition directly. We'll only mount the logical partition since the logical partition is inside the extended partition.
+<h3>4.1. Formatting Partitions</h3>
+At this point, we are ready to format the partitions for use. We'll use <em>ext4</em> for the partition in this illustration,  although one can still use any partition format.
+
+Let's format both partitions to <em>ext4</em>:
+<pre><code class="language-bash">$ sudo mkfs.ext4 -F /dev/sda2; sudo mkfs.ext4 -F /dev/sda5
+
+mke2fs 1.45.5 (01-Jul-2022)
+Creating filesystem with 51928145 4k blocks and 12984320 inodes
+Filesystem UUID: 63a3457e-c3a1-43f4-a0e6-01a7dbe7dfed
+Superblock backups stored on blocks: 
+	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208, 
+	4096000, 7962624, 11239424, 20480000, 23887872
+
+Allocating group tables: done                            
+Writing inode tables: done                            
+Creating journal (262144 blocks): done
+Writing superblocks and filesystem accounting information: done 
+
+mke2fs 1.45.7 (01-Jul-2022)
+Creating filesystem with 51928145 4k blocks and 12984320 inodes
+Filesystem UUID: 63a3457e-c3a1-43f4-a0e6-01a7dbe7dfed
+Superblock backups stored on blocks: 
+	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208, 
+	4096000, 7962624, 11239424, 20480000, 23887872
+
+Allocating group tables: done                            
+Writing inode tables: done                            
+Creating journal (262144 blocks): done
+Writing superblocks and filesystem accounting information: done </code></pre>
+<strong>The flag <em>-F</em> would force <em>mkfs</em> to create a filesystem.</strong> The option is handy if the specified device is not a partition on a device or if other parameters don't make sense.
+
+Additionally, to forcefully create a filesystem where the filesystem appears to be in use or is mounted, we can specify the <em>-F</em> option twice, but it's risky.
+<h3>4.2. Mounting Partitions</h3>
+<strong>To mount a partition, we'll create the mount point first with <em><a href="https://www.baeldung.com/linux/create-folder-path-file">mkdir</a>.</em></strong> Then we'll mount the partition using the new directory as the mount point.
+
+Now, let's create the mount point in the <em>/mnt</em> directory:
+<pre><code class="language-bash">$ sudo mkdir -p /mnt/newpart</code></pre>
+<p class="terminal">The <em>-p</em> switch ensures the creation of the parent directory if it's not available.</p>
+<p class="terminal">Next, let's mount the new partition to the new directory:</p>
+
+<pre><code class="language-bash">$ sudo mount /dev/sda5/ /mnt/newpart</code></pre>
+Lastly, partitions will stay mounted until we unmount them or <em><a href="https://www.baeldung.com/linux/shutdown-reboot-from-terminal">shutdown</a></em> the machine. We can define the mount in the <em>/etc/fstab</em> file to automatically mount a partition when the Linux system boots up.
+<h2>5. Conclusion</h2>
+In this article, we've learned how to delete, create and extend partitions in a Linux system from the command line. Also, we've seen how to format and mount the partitions after creating a new partition.
+
+However, <strong>editing partitions in use can lead to harmful damage.</strong> Hence,<strong> to edit system partitions, it's better to back up its content and boot from a Live CD or bootable USB stick.</strong> Also, we have to carry out this task carefully when we do it on a public server and note changes to system files for future admins to reference.
