@@ -1,0 +1,299 @@
+<h2>1. Overview</h2>
+<a href="https://www.baeldung.com/linux/ssh-putty-to-local-vm">PuTTY</a> is a
+popular open-source
+<a href="https://www.baeldung.com/cs/ssh-intro">SSH</a> client software for
+Windows. However, we can also use PuTTY on a Linux machine. In this tutorial, we
+explore a way to connect a Linux machine to a Windows machine using PuTTY.
+<h2>2. Enable OpenSSH Server on Windows</h2>
+OpenSSH is an open-source application that offers both client and server SSH
+utilities. Also, OpenSSH is free as an additional feature on Windows systems
+from version 10.
+<h3>2.1. Install the OpenSSH Server</h3>
+Here, we'll install an SSH server on a Windows system. Again,
+<strong
+  >we can install the OpenSSH Server from the
+  <em>Optional features</em> settings on Windows</strong
+>. To illustrate, let's start with the following steps on a Windows 10 system:
+<ol>
+  <li>Click on the <em>Settings</em> icon</li>
+  <li>Select <em>Apps</em></li>
+  <li>Locate the <em>Apps &amp; features</em> section</li>
+</ol>
+We should have a link to the <em>Optional features</em>:
+
+<img
+  class="aligncenter wp-image-82036 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/10/optional_feature.jpg"
+  alt="Optional features"
+  width="903"
+  height="738"
+/>
+
+Further, let's select <em>Optional features</em> and scan the list to see if the
+OpenSSH Server is already installed. If not, let's do so now:
+<ol>
+  <li>Select <em>Add a feature</em> at the top of the page</li>
+  <li>Search for <em>OpenSSH Server</em> in the search bar</li>
+  <li>Mark the checkbox for <em>OpenSSH Server</em></li>
+  <li>Click <em>Install(1)</em> at the bottom of the screen</li>
+</ol>
+<img
+  class="aligncenter wp-image-82038 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/10/install_openSSH_server.jpg"
+  alt="Installing OpenSSH server"
+  width="677"
+  height="735"
+/>
+
+Once the process concludes, we can return to <em>Optional features</em>. Now, we
+should see <em>OpenSSH Server</em> in the list. Alternatively,
+<strong>we can install the OpenSSH Server from the command line</strong>. First,
+let's check if we already have the OpenSSH Server on our system. To do so, we
+need administrative access to
+<a href="https://learn.microsoft.com/en-us/powershell/">PowerShell</a>:
+<pre><code class="language-powershell">PS C:\&gt; Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
+
+Name : OpenSSH.Client~~~~0.0.1.0
+State : Installed
+
+Name : OpenSSH.Server~~~~0.0.1.0
+State : NotPresent</code></pre>
+The result shows that we don't have the OpenSSH Server on our system. Now, we'll
+install the program from PowerShell with the
+<em>Add-WindowsCapability</em> command:
+<pre><code class="language-powershell">PS C:\&gt; Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+
+Operation
+     Running
+       [ooooooooooooooooooooooooooooooooooo                                   ]
+
+Path          :
+Online        : True
+RestartNeeded : False</code></pre>
+Next, we'll proceed to start the OpenSSH Server process and prepare it for
+connection.
+<h3>2.2. Start the <em>sshd</em> Service</h3>
+Following the setup of the OpenSSH Server, we can start it.
+<strong><em>sshd</em> is the OpenSSH Server process.</strong>
+
+To start <em>sshd</em>, we'll
+<strong>launch PowerShell as an administrator</strong>. First, let's check the
+state of the <em>sshd</em> service:
+<pre><code class="language-powershell">PS C:\&gt; Get-Service sshd
+
+Status   Name               DisplayName
+------   ----               -----------
+Stopped  sshd               OpenSSH SSH Server</code></pre>
+Here, we see that <em>sshd</em> is not running, so we'll start it:
+<pre><code class="language-powershell">PS C:\&gt; Start-Service sshd
+WARNING: Waiting for service 'OpenSSH SSH Server (sshd)' to start...</code></pre>
+Further, let's check the status of the service:
+<pre><code class="language-powershell">PS C:\&gt; Get-Service sshd
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  sshd               OpenSSH SSH Server</code></pre>
+In addition,
+<strong
+  >we can configure the <em>sshd</em> service to start on system
+  start-up</strong
+>:
+<pre><code class="language-powershell">PS C:\&gt; Set-Service -Name sshd -StartupType 'Automatic'</code></pre>
+Also, the OpenSSH Server creates and enables the
+<em>OpenSSH-Server-In-TCP </em>firewall rule. This opens up <em>port 22</em> for
+inbound SSH traffic. Of course, we can check to ensure the port is active:
+<pre><code class="language-powershell">PS C:\&gt; Get-NetFirewallRule -Name *ssh*
+
+Name                  : OpenSSH-Server-In-TCP
+DisplayName           : OpenSSH SSH Server (sshd)
+Description           : Inbound rule for OpenSSH SSH Server (sshd)
+DisplayGroup          : OpenSSH Server
+Group                 : OpenSSH Server
+Enabled               : True
+Profile               : Any
+Platform              : {}
+Direction             : Inbound
+Action                : Allow
+EdgeTraversalPolicy   : Block
+LooseSourceMapping    : False
+LocalOnlyMapping      : False
+Owner                 :
+PrimaryStatus         : OK
+Status                : The rule was parsed successfully from the store. (65536)
+EnforcementStatus     : NotApplicable
+PolicyStoreSource     : PersistentStore
+PolicyStoreSourceType : Local</code></pre>
+To clarify, the output shows that the firewall allows for inbound SSH traffic
+via <em>Action:Allow </em>and <em>Direction:Inbound</em>. If it's missing, we
+can always add it:
+<pre><code class="language-powershell">PS C:\&gt; New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22</code></pre>
+Next, let's install and set up PuTTY on Linux.
+<h2>3. PuTTY on Linux</h2>
+Initially, we set up an SSH server on the host Windows machine. Now, we'll
+install the PuTTY SSH client on a Linux system.
+<h3>3.1. Install PuTTY</h3>
+Notably, under Ubuntu,
+<strong>PuTTY is available in the Universe repository</strong>. It's usually
+enabled by default, but we can also enable the repository manually:
+<pre><code class="language-bash">$ sudo add-apt-repository universe</code></pre>
+Then, let's update our Linux system package repository:
+<pre><code class="language-bash">$ sudo apt-get update</code></pre>
+Next, let's install PuTTY:
+<pre><code class="language-bash">$ sudo apt-get install -y putty
+Reading package lists... Done
+Building dependency tree 
+Reading state information... Done
+The following additional packages will be installed:
+putty-tools
+...
+</code></pre>
+Here, the <em>-y</em> flag confirms any prompts during the process. In addition,
+<strong
+  >the command installs PuTTY with <em>putty-tools</em>, which includes several
+  utilities</strong
+>:
+<ul>
+  <li>
+    <em>pscp</em> for copying files through the
+    <a
+      href="https://www.baeldung.com/linux/sftp-scp-fish-protocols#secure-copy-protocol-scp"
+      >Secure Copy Protocol (SCP)</a
+    >
+  </li>
+  <li>
+    <em>psftp</em> for managing files using
+    <a
+      href="https://www.baeldung.com/linux/sftp-scp-fish-protocols#ssh-file-transfer-protocol-sftp"
+      >SSH File Transfer Protocol (SFTP)</a
+    >
+  </li>
+  <li>
+    <a href="https://www.baeldung.com/linux/pem-ppk-keys."><em>puttygen</em></a>
+    for generating RSA and DSA keys
+  </li>
+</ul>
+Lastly, we can verify the process is complete by checking the version we
+installed:
+<pre><code class="language-bash">$ putty --version
+PuTTY: Release 0.73
+Build platform: 64-bit Unix (GTK + X11)
+Compiler: gcc 9.3.0
+Compiled against GTK version 3.24.14
+Source commit: 745ed3ad3beaf52fc623827e770b3a068b238dd5</code></pre>
+Next, we'll create the public
+<a href="https://www.baeldung.com/linux/ssh-setup-public-key-auth"
+  >authentication key</a
+>.
+<h3>3.2. Generate Public Key</h3>
+PuTTY allows for
+<a href="https://www.baeldung.com/linux/public-key-from-private-key"
+  >public key authentication</a
+>
+using the
+<a href="https://www.baeldung.com/linux/pem-ppk-keys."><em>puttygen</em></a>
+tool. Importantly,
+<strong
+  ><em>puttygen</em> saves the key in a <em>.ppk</em> key file format</strong
+>. Let's use <em>puttygen</em> to enable public key authentication:
+<pre><code class="language-bash">$ puttygen -t rsa -b 2048 -o pubkey.ppk
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++
++++++
+Enter passphrase to save key: 
+Re-enter passphrase to verify: </code></pre>
+Here are the flags we used in the command:
+<ul>
+  <li><em>-t</em> specifies the key type</li>
+  <li><em>-b</em> indicates the size of the key in bits</li>
+  <li><em>-o</em> defines the output file for the key</li>
+</ul>
+Notably, we can leave the passphrase empty. To do so, we just press Enter on
+passphrase prompts. Then, to get the public key, we just use
+<em>puttygen</em> again:
+<pre><code class="language-bash">$ puttygen -L pubkey.ppk</code></pre>
+Lastly, we'll copy the public key to the <em>Users\USERNAME\</em
+><em>.ssh\authorized_keys</em> file on the server. Of course, if the
+<em>.ssh</em> folder and the <em>authorized_keys</em> file do not already exist,
+we can create them. Next, let's establish an SSH link from our Linux machine to
+the Windows system using PuTTY.
+<h2>4. Establish SSH Connection</h2>
+Finally, having set up both the SSH client and server, let's proceed to link to
+our server using PuTTY. Since the initial steps for setting up the OpenSSH
+Server on Windows, our server is already listening for a connection. Now, let's
+run PuTTY from the Linux command line:
+<pre><code class="language-bash">$ putty
+...</code></pre>
+This command opens the <em>PuTTY Configuration</em> window:
+
+<img
+  class="aligncenter wp-image-82129 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/10/PuTTY-configuration-window.png"
+  alt="PuTTY configuration window"
+  width="643"
+  height="579"
+/>
+
+Further, to connect to the host system:
+<ul>
+  <li>
+    Enter the
+    <a href="https://www.baeldung.com/linux/access-host-from-guest">hostname</a>
+    or <em>IP address</em> of our host Windows machine in the
+    <em>Host Name</em> box
+  </li>
+  <li>Select SSH as the <em>Connection type</em></li>
+</ul>
+Then, we'll bring on our security key for authentication:
+<ul>
+  <li>
+    Navigate to <em>Connection</em> &gt; <em>SSH &gt; Auth</em> in the PuTTY
+    menu
+  </li>
+  <li>Click <em>Browse</em> and select the key file</li>
+  <li>Click <em>Open</em></li>
+</ul>
+<img
+  class="aligncenter wp-image-82167 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/10/select-auth-key-file.jpg"
+  alt="Select authentication key file"
+  width="641"
+  height="578"
+/>
+
+On clicking <em>Open</em>, the <em>PuTTY Security Alert</em> pops up. We'll
+click <em>Accept </em>to continue the connection:
+
+<img
+  class="aligncenter wp-image-82148 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/10/PuTTY-security-alert.png"
+  alt="PuTTY security alert"
+  width="549"
+  height="352"
+/>
+
+Following the security alert, we'll provide our login credentials for
+authentication:
+
+<img
+  class="aligncenter wp-image-82131 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/10/remote-windows-login-with-PuTTY.png"
+  alt="Remote Windows Login"
+  width="493"
+  height="352"
+/>
+
+Now, we've successfully set up an SSH link to our host machine:
+
+<img
+  class="aligncenter wp-image-82130 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/10/remote-access-to-windows-with-PuTTY.png"
+  alt="Remote access to windows with PuTTY"
+  width="492"
+  height="351"
+/>
+
+Lastly, we can type <em>exit</em> and press Enter to quit the session.
+<h2>5. Conclusion</h2>
+In summary, we've seen how to connect a Linux machine to an OpenSSH server on a
+Windows machine using PuTTY. Also, we created a public security key for a secure
+SSH connection.

@@ -1,0 +1,285 @@
+<h2>1. Introduction</h2>
+The start-up of a Linux operating system follows a step-by-step process. This
+process starts with the power on or by running a command in the terminal:
+
+<img
+  class="aligncenter wp-image-81872 size-large"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/10/boot-process-662x1024.png"
+  alt="Linux boot process"
+  width="580"
+  height="897"
+/>
+
+In this tutorial, we'll go through the booting steps of a Linux system.
+<h2>2. BIOS and UEFI</h2>
+First, the BIOS (Basic Input/Output System) or UEFI (Unified Extensible Firmware
+Interface) program kicks in once the system powers up. Usually, the BIOS
+contains all the code to gain initial access to the main machine devices:
+<ul>
+  <li>keyboard</li>
+  <li>display screen</li>
+  <li>disk drives</li>
+  <li>serial communications</li>
+</ul>
+However, most of these devices will have dedicated device drivers taking over
+once the system boots fully.
+
+<strong
+  ><a href="https://www.baeldung.com/cs/bios-vs-cmos-vs-uefi">BIOS and UEFI</a>
+  are firmware interfaces that computers use to boot up the operating system
+  (OS)</strong
+>. Yet, the two programs differ in how they store metadata on and about the
+drive:
+<ul>
+  <li>BIOS uses the Master Boot Record (MBR)</li>
+  <li>UEFI uses the GUID Partition Table (GPT)</li>
+</ul>
+Next, the BIOS or UEFI runs the power-on self-test (POST). The POST does a
+series of tasks:
+<ul>
+  <li>verify the hardware components and peripherals</li>
+  <li>
+    carry out tests to ensure that the computer is in proper working condition
+  </li>
+</ul>
+Further, if this test finds any error, it commonly shows an error message on the
+screen. In case the test fails to detect the RAM, POST triggers a beeping sound.
+Finally, if the system passes the POST, it signals the start-up process to the
+next stage.
+<h2>3. Boot Loader</h2>
+Now, the BIOS or UEFI has run the POST to check the state of the machine. Moving
+on,
+<strong
+  >the
+  <a href="https://www.baeldung.com/cs/bios-vs-cmos-vs-uefi">BIOS/UEFI</a>
+  selects a boot device depending on the system configuration</strong
+>. Usually, there's a default boot order:
+<ol>
+  <li>Hard drives</li>
+  <li>USB drives</li>
+  <li>CD drives</li>
+</ol>
+Of course, we can configure the BIOS or UEFI to choose the boot device in any
+order. Whatever their order, the computer looks for the boot loader in these
+devices one by one. In fact,
+<strong
+  >a BIOS system has the boot loader located in the first sector of the boot
+  device</strong
+>; this is the
+<a
+  class="editor-rtfLink"
+  href="https://www.baeldung.com/linux/partitioning-disks"
+  target="_blank"
+  rel="noopener"
+  >MBR</a
+>. It takes up the first 512 bytes on the disk. On the other hand,
+<strong>a UEFI system stores all startup data in an <em>.efi</em> file</strong>.
+The file is on the EFI System Partition, which contains the boot loader. For
+example, we can use
+<a
+  href="https://www.baeldung.com/linux/extend-logical-extended-partitions-fdisk"
+  ><em>fdisk</em></a
+>
+to check the system partition on our machine:
+<pre><code class="language-bash">$ fdisk -l
+Disk /dev/nvme0n1: 232.91 GiB, 250059350016 bytes, 488397168 sectors
+Disk model: Samsung SSD 960 EVO 250GB               
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 6907D1B3-B3AB-7E43-AD20-0707A656A1B5
+
+Device            Start       End   Sectors   Size Type
+/dev/nvme0n1p1     2048   1050623   1048576   512M EFI System
+/dev/nvme0n1p2  1050624  34605055  33554432    16G Linux swap
+/dev/nvme0n1p3 34605056 488397134 453792079 216.4G Linux filesystem</code></pre>
+Notably,
+<strong
+  >the boot loader is a small program that loads the operating system</strong
+>. The main job of the boot loader is to perform three actions with the kernel:
+locate on the disk, insert into memory, and execute with the supplied options.
+The following are some of the available boot loaders for a Linux system:
+<ul>
+  <li>LILO</li>
+  <li>SYSILINUX</li>
+  <li>GRUB2</li>
+</ul>
+In general, once the computer finds the boot loader on a device, it will run it.
+Consequently, this loads a larger and more complex program which eventually
+starts our operating system. Let's highlight some of the boot loaders in use
+with Linux.
+<h3>3.1. LILO</h3>
+Initially,
+<a href="https://salsa.debian.org/joowie-guest/upstream_lilo">LILO</a> (Linux
+Loader) was one of the most widely used Linux boot loaders. However, it has lost
+favor because it has no support for multi-boot environments and for UEFI. Also,
+it has limited support for new filesystems. Officially, the developers of LILO
+halted its development and support in December 2015. Hence, the Linux Loader is
+old and mostly obsolete.
+<h3>3.2. SYSLINUX</h3>
+Equally, <a
+  class="editor-rtfLink"
+  href="https://wiki.syslinux.org/wiki/index.php?title=SYSLINUX"
+  target="_blank"
+  rel="noopener"
+  >SYSLINUX</a
+>
+is a boot loader for the Linux operating system, which runs on a
+<a href="https://www.baeldung.com/cs/ntfs-vs-fat32-vs-exfat#fat32"
+  >FAT filesystem</a
+>, typical for a Windows system. In short, its goal is to ease the process of
+installing Linux for the first time. Further, SYSLINUX supports several major
+<a href="https://www.baeldung.com/linux/filesystems">filesystems</a>:
+<ul>
+  <li>FAT</li>
+  <li>ext2</li>
+  <li>ext3</li>
+  <li>ext4</li>
+</ul>
+In addition, SYSLINUX can support
+<a href="https://www.baeldung.com/linux/filesystems#a-betterbutter-filesystem"
+  >Btrfs</a
+>
+and
+<a href="https://www.baeldung.com/linux/filesystems#3-xfs-90s-for-big-iron"
+  >XFS</a
+>
+filesystems with some constraints.
+<h3>3.3. GRUB2</h3>
+Despite the many choices, almost all (non-embedded) modern Linux distributions
+use GRUB (GRand Unified Boot Loader) because it's very feature-rich:
+<ul>
+  <li>ability to boot multiple operating systems</li>
+  <li>boots both a graphical and a text-based interface</li>
+  <li>allows ease of use over a serial cable</li>
+  <li>strong command line interface for interactive configuration</li>
+  <li>network-based diskless booting</li>
+</ul>
+Presently,<strong>
+  <a
+    href="https://www.gnu.org/software/grub/manual/grub/grub.html#Changes-from-GRUB-Legacy"
+    >GRUB2</a
+  >
+  has replaced its past version (GRUB), which is now known as </strong
+><a href="https://www.gnu.org/software/grub/grub-legacy.html"
+  ><strong>GRUB Legacy</strong></a
+>. Importantly, we can check for the GRUB version in our system using the
+following command:
+<pre><code class="language-bash">$ sudo grub-install -V
+grub-install (GRUB) 2.07-2ubuntu7</code></pre>
+Now, let's see what GRUB2 does in the boot process:
+<ol>
+  <li>takes over from BIOS or UEFI at boot time</li>
+  <li>loads itself</li>
+  <li>inserts the Linux kernel into memory</li>
+  <li>turns over execution to the kernel</li>
+</ol>
+Notably, the GRUB configuration file is located at <em>/boot/grub</em> by
+default:
+<pre><code class="language-bash">$ ls -l /boot/grub/
+total 2380
+-rw-r--r-- 2 root root 9006 SEP 30 22:14 /boot/grub/grub.cfg
+...</code></pre>
+Initially, GRUB Legacy had three stages in the boot process:
+<ol>
+  <li>Stage 1</li>
+  <li>Stage 1.5</li>
+  <li>Stage 2</li>
+</ol>
+However, with GRUB2, these stages don't exist anymore. Instead, it contains
+various
+<em
+  ><a href="https://www.gnu.org/software/grub/manual/grub/html_node/Images.html"
+    >*.img</a
+  ></em
+>
+files that serve similar functions. At this point, GRUB2 inserts the kernel into
+memory and turns control of the system over to the kernel.
+<h2>4. Kernel</h2>
+After going through BIOS or UEFI, POST, and using a boot loader to initiate the
+kernel,
+<strong
+  >the operating system now controls access to our computer resources</strong
+>. Here, the Linux kernel follows a predefined procedure:
+<ol>
+  <li>decompress itself in place</li>
+  <li>perform hardware checks</li>
+  <li>gain access to vital peripheral hardware</li>
+  <li>run the init process</li>
+</ol>
+Next, the init process continues the system startup by running init scripts for
+the parent process. Also, the init process inserts more kernel modules (like
+device drivers).
+<h2>5. Systemd</h2>
+To reiterate, the kernel initiates the init process, which starts the parent
+process. Here, <strong>the parent of all Linux processes </strong
+><strong>is </strong
+><strong
+  ><a href="https://www.baeldung.com/linux/differences-systemctl-service"
+    >Systemd</a
+  ></strong
+>, which replaces the old
+<a href="https://www.baeldung.com/linux/differences-systemctl-service"
+  >SysVinit</a
+>
+process. Following the booting steps, Systemd performs a range of tasks:
+<ul>
+  <li>probe all remaining hardware</li>
+  <li>mount filesystems</li>
+  <li>initiate and terminate services</li>
+  <li>manage essential system processes like user login</li>
+  <li>run a desktop environment</li>
+</ul>
+Indeed, these and other tasks allow users to interact with the system. Lastly,
+Systemd uses the<em> /etc/systemd/system/default.target</em> file to decide the
+state or target the Linux system boots into.
+<h2>6. Run Levels</h2>
+<strong
+  >In Linux, the run level stands for the current state of the operating
+  system</strong
+>. Run levels define which system services are running. Previously, SysVinit
+identified run levels by number. However, <em>.target</em> files now replace run
+levels in Systemd. Further, Systemd activates the <em>default.target</em> unit
+by default when the system boots. Let's check our default target:
+<pre><code class="language-bash"># systemctl get-default
+graphical.target</code></pre>
+Now, let's see the link between run level numbers and targets:
+<ol>
+  <li>
+    <em>poweroff.target</em>, <em>run level 0</em>: turn off (shut down) the
+    computer
+  </li>
+  <li>
+    <em>rescue.target</em>, <em>run level 1</em>: initiate a rescue shell
+    process
+  </li>
+  <li>
+    <em>multi-user.target</em>, <em>run level 3</em>: configure the system as a
+    non-graphical (console) multi-user environment
+  </li>
+  <li>
+    <em>graphical.target</em>, <em>run level 5</em>: establish a graphical
+    multi-user interface with network services
+  </li>
+  <li><em>reboot.target</em>, <em>run level 6</em>: restart the machine</li>
+  <li><em>emergency.target</em>: emergency run level</li>
+</ol>
+For instance, the target value for a desktop workstation with a graphical user
+interface (GUI) is <em>5</em>. This value stands for <em>run level 5</em> which
+is <em>graphical.target</em>. Also, the run level for a server without a GUI is
+<em>3</em> because the default target is <em>multi-user.target</em>. In
+addition,
+<strong>we can change the target (run level) while the system runs</strong>.
+This change entails that only services and other units defined under that target
+will now run on the system. For example, to switch to <em>run level 3</em> from
+<em>run level 5</em>, we can run the following command:
+<pre><code class="language-bash">$ sudo systemctl isolate multi-user.target</code></pre>
+Then, to take the system to <em>run level 5</em>, let's run the command:
+<pre><code class="language-bash">$ sudo systemctl isolate graphical.target</code></pre>
+This command returns the run level to <em>graphical.target</em>, equivalent
+to<em> level 5</em> for GUI.
+<h2>7. Conclusion</h2>
+In this article, we've seen the boot process of a Linux system. Also, we
+discussed several boot loaders and their functions. Finally, we went over the
+various run levels that a Linux system can enter during the boot process.

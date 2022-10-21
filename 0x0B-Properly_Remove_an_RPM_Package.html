@@ -1,0 +1,178 @@
+<h2>1. Introduction</h2>
+<strong
+  >Package files are the base units of software in the Linux packaging
+  system</strong
+>. Basically, it's a compressed group of files that may comprise:
+<ul>
+  <li>a number of programs</li>
+  <li>data files that support the programs</li>
+  <li>package metadata</li>
+  <li>package pre-installation and post-installation scripts</li>
+</ul>
+In this tutorial, we'll see how to remove a specific type of package from a
+Linux system.
+<h2>2. RPM Package Manager</h2>
+<strong
+  ><a
+    href="https://www.baeldung.com/linux/install-rpm-arch-based-distros#the-rpm-file"
+    >RPM</a
+  >
+  stands for Red Hat Package Manager</strong
+>. It provides the standard way to package software for the
+<a
+  href="https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux"
+  >Red Hat Enterprise Linux</a
+>
+(RHEL) distribution and its close relatives
+<a href="https://getfedora.org/">Fedora</a>,
+<a href="https://www.centos.org/">CentOS</a>, and
+<a href="https://www.opensuse.org/">OpenSUSE</a>. Also, Linux package management
+systems usually consist of two types of tools:
+<ul>
+  <li>
+    low-level tools to perform tasks such as installing and erasing package
+    files
+  </li>
+  <li>
+    high-level tools that carry out dependency resolution and metadata searching
+  </li>
+</ul>
+<strong
+  >While all Red Hat-style Linux distributions use the same low-level program
+  <em
+    ><a href="https://www.baeldung.com/linux/install-rpm-arch-based-distros"
+      >rpm</a
+    >,</em
+  >
+  the high-level tools are not the same</strong
+>. Next, we'll talk about the high-level program
+<em
+  ><a href="https://www.baeldung.com/linux/list-installed-packages">dnf</a>,</em
+>
+which the Red Hat Enterprise Linux and CentOS use.
+<h2>3. Removing RPM Packages With <em>dnf</em></h2>
+Notably, we can uninstall or remove software using high-level or low-level
+tools.
+<strong
+  >Dandified Yum (DNF) is a high-level software package tool for RPM-based Linux
+  distributions</strong
+>. It's the new-age version of the popular
+<a href="https://www.baeldung.com/linux/yum-and-apt">Yum</a> package manager. We
+can use the <em>dnf </em>program to remove a single package or a list of
+packages. To uninstall a particular software package, let's run the following
+command as a superuser:
+<pre><code class="language-bash">$ sudo dnf remove package_name</code></pre>
+Critically,
+<strong>the RPM package name differs from the RPM package file name</strong>. In
+fact, the package file names consist of five elements:
+<ul>
+  <li>package name</li>
+  <li>version</li>
+  <li>release</li>
+  <li>architecture</li>
+  <li><em>.rpm</em> suffix</li>
+</ul>
+<img
+  class="aligncenter wp-image-82396 size-full"
+  src="https://drafts.baeldung.com/wp-content/uploads/sites/2/2022/10/RPM-package-file-name.png"
+  alt="RPM package file name"
+  width="996"
+  height="427"
+/>
+
+Further, we can remove multiple packages at once by adding more package names to
+the command. For instance, the following command removes the packages listed
+after the <em>remove</em> keyword:
+<pre><code class="language-bash">$ sudo dnf remove vidutils rhyme zipper</code></pre>
+Here, we only need the package name to remove a package from our system.
+However, erasing a package using <em>dnf </em>may also remove other packages
+that depend on it. We'll employ the low-level tool <em>rpm </em>in a later
+section to remove a package without touching its dependencies.
+<h2>4. Removing RPM Packages With <em>rpm</em></h2>
+Unlike <em>dnf</em>, <strong
+  ><em>rpm</em> can remove a package without removing packages that depend on
+  it</strong
+>. In other words, the <em>rpm </em>program doesn't handle dependency
+resolution. To erase a program with <em>rpm,</em> we run the
+<em>rpm </em>command with the <em>-e</em> flag:
+<pre><code class="language-bash">$ sudo rpm -e util-linux</code></pre>
+Usually, if other packages need the one we're uninstalling, <em>rpm -e</em> will
+fail. Consequently, it produces an error message. A successful uninstall
+produces no output. Still, programs in Linux are hardly stand-alone. Instead,
+they often rely on the presence of other software units. Hence, the system
+blocks operations that would cause problems from completion like:
+<ul>
+  <li>removing a package that another package depends on</li>
+  <li>
+    installing a package when the system needs initial software to run the
+    package
+  </li>
+</ul>
+For example, we can see the <em>Failed dependencies</em> error in the following
+command output:
+<pre><code class="language-bash">$ sudo rpm --test -e xz
+
+error: Failed dependencies:
+xz is needed by (installed) pcp-5.1.1-4.el8_3.x86_64
+xz is needed by (installed) sos-3.9.1-6.el8.noarch
+xz is needed by (installed) gettext-devel-0.19.8.1-17.el8.x86_64
+xz is needed by (installed) libreport-2.9.5-15.el8.x86_64
+xz is needed by (installed) dracut-049-95.git20200804.el8_3.4.x86_64
+xz is needed by (installed) libvirt-daemon-driver-qemu-6.0.0-28.module+el8.3.0+7827+5e65edd7.x86_64
+xz is needed by (installed) rpm-build-4.14.3-4.el8.x86_64
+xz is needed by (installed) libguestfs-1:1.40.2-25.module+el8.3.0+7421+642fe24f.x86_64
+xz is needed by (installed) sysstat-11.7.3-5.el8.x86_64
+/usr/bin/xz is needed by (installed) file-roller-3.28.1-3.el8.x86_64</code></pre>
+The <em>--test</em> flag with <em>-e</em> checks if the erase command would
+succeed or fail without actually doing the uninstall. If the process is
+successful, <em>rpm</em> prints no output.
+<h2>5. Removing RPM Packages Forcefully</h2>
+Indeed, we can force <em>rpm</em> to remove a package that gives us a
+<em>Failed dependencies</em> error. To do so, we include some options in the
+<em>rpm </em>command:
+<pre><code>$ sudo rpm -e --allmatches --nodeps --noscripts --notriggers --test PACKAGE_NAME
+</code></pre>
+Here are the roles of the flags in the command:
+<ul>
+  <li><em>PACKAGE_NAME</em> - the name of the package to work with</li>
+  <li><em>-e</em> or <em>--erase</em> - removes the package</li>
+  <li>
+    <em>--allmatches </em>- removes all versions of packages that match the <em
+      >PACKAGE_NAME</em
+    >
+  </li>
+  <li><em>--nodeps </em>- prevents dependency checks</li>
+  <li>
+    <em>--noscripts </em>- blocks the command from executing scriptlets around
+    the package processing
+  </li>
+  <li>
+    <em>--notriggers </em>- similar to <em>--noscripts, </em> stops the command
+    from triggering scripts
+  </li>
+  <li>
+    <em>--test</em> - checks if the uninstall would succeed or fail without
+    actually performing actions
+  </li>
+</ul>
+In addition,
+<strong
+  >using the <em>--nodeps</em> flag may cause other programs on the system to
+  stop working.</strong
+>
+Essentially, installing or removing packages with <em>rpm --nodeps</em> can
+cause applications or the system to malfunction or crash. Further, in critical
+cases,
+<strong
+  >fixing such problems may require us to reinstall the operating system or boot
+  into a rescue environment.</strong
+>
+
+Because of this, it's usually better to use package management with dependency
+resolution, regardless of the difficulties it may pose.
+<h2>6. Conclusion</h2>
+In this article, we saw the ways to remove an RPM package from the Linux system.
+Also, we learned how to remove an RPM package with dependencies forcefully. We
+understood that the Dandified Yum package manager can carry out dependency
+resolution by fetching packages from online repositories, making it safer than
+using the low-level <em>rpm</em> directly.
